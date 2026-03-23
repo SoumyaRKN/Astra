@@ -1,380 +1,137 @@
-# 🤖 Personal AI Assistant
+# Astra
 
-**A fully self-hosted AI companion with voice chat, animated avatar, and media generation—your personal AI that never leaves your computer.**
+A fully local AI assistant with chat, voice, image generation, video generation, music, avatar animation, and model training. Everything runs on your machine — private, offline, no API keys needed.
 
-**Status:** ✅ **ALL 7 PHASES COMPLETE (100%)** 🎉  
-**Version:** 1.0.0  
-**Last Updated:** March 23, 2026
+## Features
 
----
+- **Chat** — Conversations with a local LLM via Ollama
+- **Voice Chat** — Speak and hear responses (Whisper + TTS)
+- **Image Generation** — Text-to-image, image-to-image, and LoRA-trained generation (Stable Diffusion)
+- **Video Generation** — Text-to-video and image-to-video
+- **Music / Audio** — Generate soundtracks and enhance audio (MusicGen)
+- **Avatar** — Upload a photo, detect face, generate animated avatar video
+- **Training** — Fine-tune with LoRA on your own images for personalized generation
+- **Gallery** — Browse all generated media
+- **Memory** — Conversations remember context across messages
+- **100% Private** — Nothing ever leaves your computer
 
-## ⚡ 5-Minute Setup
+## Quick Start
 
-```bash
-# 1. Navigate to project
-cd personal-ai-assistant
+### 1. Prerequisites
 
-# 2. Deploy everything
-bash scripts/deploy-local.sh
+- **Python 3.10+** — [python.org](https://www.python.org/downloads/)
+- **Node.js 18+** — [nodejs.org](https://nodejs.org/)
+- **Ollama** — Install with:
 
-# 3. Open in browser
-# Frontend:  http://localhost:3000
-# API Docs:  http://localhost:8000/docs
+  ```bash
+  curl -fsSL https://ollama.ai/install.sh | sh
+  ```
 
-# Done! Start chatting immediately 🎤
-```
-
----
-
-## 📚 Complete Documentation
-
-### 🎯 Pick Your Path (Click for What You Need)
-
-#### 👶 **NEW to this project?**
-
-- **[START_HERE.md](START_HERE.md)** - 5 minute beginner guide
-- **[BEGINNER_GUIDE.md](BEGINNER_GUIDE.md)** - Complete beginner explanation (no tech jargon)
-
-#### 📖 **Want to learn how to use it?**
-
-- **[QUICK_START.md](QUICK_START.md)** - 5-minute quick start
-- **[USER_GUIDE.md](USER_GUIDE.md)** - All features explained
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Commands cheat sheet
-
-#### 🔧 **Want to set it up & deploy?**
-
-- **[GETTING_STARTED_GUIDE.md](GETTING_STARTED_GUIDE.md)** - Detailed setup (30 min)
-- **[PHASE_7_COMPLETION.md](PHASE_7_COMPLETION.md)** - Production deployment
-- **[PRODUCTION_SECURITY.md](PRODUCTION_SECURITY.md)** - Security guide
-
-#### 🧠 **Want to customize the AI?**
-
-- **[TRAINING_GUIDE.md](TRAINING_GUIDE.md)** - Train AI your way
-- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Test everything
-
-#### 👨‍💻 **Are you a developer/AI agent?**
-
-- **[AI_AGENT_GUIDE.md](AI_AGENT_GUIDE.md)** - Complete technical documentation
-- **[docs/API.md](docs/API.md)** - API reference
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture
-- **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Technical troubleshooting
-
----
-
-## 🏗️ Architecture
-
-```
-User Interface          Web (Next.js)  +  Desktop (Tauri)
-        ↓                               ↓
-Backend Services        FastAPI (Python)
-        ↓
-Core Services           LLM (Ollama) + Voice + Avatar
-        ↓
-Local Databases         PostgreSQL + SQLite
-```
-
-**Everything runs locally. 100% private. No cloud services.**
-
----
-
-## 🛠️ Tech Stack
-
-| Component | Technology | Why |
-|-----------|-----------|-----|
-| **LLM** | Ollama + Mistral 3B | Local, fast, quantized |
-| **Backend** | FastAPI + Python | Modern async, simple |
-| **Frontend Web** | Next.js + React | Modern, responsive |
-| **Desktop** | Tauri + Rust | Lightweight, native |
-| **Voice** | Pipecat | Real-time orchestration |
-| **TTS** | CosyVoice/Piper | Open-source, local |
-| **Avatar** | LivePortrait | Your images → animated |
-| **Database** | PostgreSQL + SQLite | Local-only storage |
-
----
-
-## 📋 Development Phases
-
-| Phase | Timeline | Status | Goal |
-|-------|----------|--------|------|
-| **1** | Weeks 1-2 | ✅ In Progress | Backend foundation + LLM |
-| **2** | Weeks 3-4 | ⏳ Next | Voice I/O (speak & listen) |
-| **3** | Weeks 5-6 | ⏳ Coming | Animated avatar responses |
-| **4** | Weeks 7-8 | ⏳ Coming | Web UI & chat interface |
-| **5** | Weeks 9-10 | ⏳ Coming | Desktop app (cross-platform) |
-| **6** | Weeks 11+ | ⏳ Optional | Advanced features |
-
-**Current Phase 1 Checklist:**
-
-- ✅ Project structure created
-- ✅ Documentation framework set up
-- ✅ FastAPI backend scaffolded
-- ✅ LLM service integrated (Ollama)
-- ✅ Conversation memory system
-- ✅ Configuration & environment setup
-- ⏳ Test LLM endpoint
-- ⏳ Install Ollama locally
-- ⏳ Download model
-
----
-
-## 🚀 First Steps
-
-### Step 1: Install Dependencies
+### 2. Setup
 
 ```bash
-bash scripts/setup.sh
+cd Astra
+./setup.sh
 ```
 
-This will:
-
-- Create Python virtual environment
-- Install all Python packages
-- Create `.env` configuration
-- Verify installations
-
-### Step 2: Install Ollama
+### 3. Run
 
 ```bash
-bash scripts/install-ollama.sh
+./run.sh
 ```
 
-Or manually:
+Open **<http://localhost:3000>**
 
-```bash
-curl -fsSL https://ollama.ai/install.sh | sh
-```
-
-### Step 3: Download LLM Model
-
-```bash
-ollama pull mistral:3b-instruct-q4_K_M
-# ~3.8 GB, takes 5-10 minutes
-```
-
-**Why Mistral 3B?** Your CPU is Intel i5-1155G7. Mistral 3B gives:
-
-- ✅ 5-10 second responses (vs 60+ with 7B)
-- ✅ Good quality still (smart model)
-- ✅ Fits in your 16 GB RAM
-
-### Step 4: Start Backend
-
-**Terminal 1 - Ollama Server:**
-
-```bash
-ollama serve
-```
-
-**Terminal 2 - FastAPI Backend:**
-
-```bash
-cd backend
-source venv/bin/activate
-python main.py
-```
-
-**Terminal 3 - Test (Optional):**
-
-```bash
-curl http://localhost:8000/health
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Hello!"}'
-```
-
----
-
-## 📂 Project Structure
+## Project Structure
 
 ```
-personal-assistant/
-├── PROJECT_CONTEXT.md          ← Start here
-├── PHASE_STATUS.md             ← Progress tracking
-├── PROJECT_PLAN.md             ← Full tech specs
-├── .instructions.md            ← Setup guide
-├── README.md                   ← You are here
-│
-├── backend/                    ← Python FastAPI
-│   ├── venv/                   ← Virtual environment
-│   ├── main.py                 ← FastAPI app
-│   ├── config.py               ← Config management
-│   ├── requirements.txt         ← Dependencies
-│   ├── services/               ← LLM, TTS, Avatar, Voice
-│   ├── db/                     ← Database models
-│   └── memory/                 ← Conversation memory
-│
-├── frontend/                   ← Next.js + React (Phase 4+)
-│   ├── package.json
-│   ├── src/app/                ← Pages
-│   ├── src/components/         ← React components
-│   ├── src/hooks/              ← Custom hooks
-│   └── src/services/           ← API client
-│
-├── desktop/                    ← Tauri wrapper (Phase 5+)
-│   ├── src/                    ← React frontend
-│   └── src-tauri/              ← Rust backend
-│
-├── docs/                       ← Extended documentation
-├── scripts/                    ← Setup scripts
-├── models/                     ← LLM cache (ignored)
-└── data/                       ← Database + logs (ignored)
+Astra/
+├── backend/
+│   ├── main.py              FastAPI app (all routes)
+│   ├── llm.py               Ollama LLM integration
+│   ├── memory.py            Chat history
+│   ├── config.py            Settings
+│   ├── database.py          SQLite setup
+│   ├── models.py            Database models
+│   ├── requirements.txt
+│   └── services/
+│       ├── stt.py           Speech-to-text (Whisper)
+│       ├── tts.py           Text-to-speech
+│       ├── voice.py         Voice chat pipeline
+│       ├── image.py         Image generation (SD)
+│       ├── video.py         Video generation
+│       ├── audio.py         Audio/music generation
+│       ├── avatar.py        Avatar animation
+│       └── train.py         LoRA fine-tuning
+├── frontend/
+│   ├── src/app/             Pages (chat, voice, image, video, audio, avatar, train, gallery, settings)
+│   ├── src/components/      Shared components (sidebar)
+│   ├── src/lib/api.ts       API client
+│   └── src/store/           Zustand state
+├── storage/                 Generated media (auto-created)
+├── setup.sh                 Install everything
+├── run.sh                   Start Astra
+└── .env                     Configuration
 ```
 
----
+## Configuration
 
-## 🔧 Common Commands
+Edit `.env`:
 
-### Backend
-
-```bash
-# Activate venv
-cd backend && source venv/bin/activate
-
-# Run backend
-python main.py
-
-# Run with auto-reload (development)
-python -m uvicorn main:app --reload
-
-# Test API
-curl http://localhost:8000/docs  # Interactive API docs
+```env
+OLLAMA_MODEL=mistral        # AI model (try: llama3, gemma2, phi3)
+LLM_TEMPERATURE=0.7         # Creativity (0.0 = precise, 1.0 = creative)
+LLM_MAX_TOKENS=512          # Max response length
 ```
 
-### Manage Virtual Environment
+## API Routes
 
-```bash
-# Activate
-source backend/venv/bin/activate
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | System status |
+| `/chat` | POST | Send a chat message |
+| `/sessions` | GET | List chat sessions |
+| `/history/{session}` | GET/DELETE | Chat history |
+| `/voice` | POST | Voice chat (audio in → text + audio out) |
+| `/voice/stt` | POST | Speech-to-text |
+| `/voice/tts` | POST | Text-to-speech |
+| `/ws/voice` | WebSocket | Real-time voice chat |
+| `/image/generate` | POST | Text-to-image |
+| `/image/from-image` | POST | Image-to-image |
+| `/image/from-trained` | POST | Generate from LoRA model |
+| `/video/generate` | POST | Text-to-video |
+| `/video/from-image` | POST | Image-to-video |
+| `/audio/generate` | POST | Generate music |
+| `/audio/enhance` | POST | Enhance audio |
+| `/avatar/upload` | POST | Upload avatar photo |
+| `/avatar/profile` | GET | Get avatar profile |
+| `/avatar/animate` | POST | Animate avatar |
+| `/train/upload` | POST | Upload training data |
+| `/train/start` | POST | Start LoRA training |
+| `/train/status/{id}` | GET | Training job status |
+| `/train/models` | GET | List trained models |
+| `/gallery/images` | GET | Generated images |
+| `/gallery/videos` | GET | Generated videos |
+| `/gallery/audio` | GET | Generated audio |
+| `/docs` | GET | Interactive API docs |
 
-# Deactivate
-deactivate
+## Tech Stack
 
-# Install new package
-pip install package_name
+| Component | Technology |
+|-----------|-----------|
+| LLM | Ollama + Mistral |
+| Backend | FastAPI (Python) |
+| Frontend | Next.js 15 + React 19 |
+| Styling | Tailwind CSS 4 |
+| State | Zustand 5 |
+| Database | SQLite |
+| Images | Stable Diffusion (diffusers) |
+| Video | ZeroScope / ModelScope |
+| Music | MusicGen |
+| Speech | Whisper (STT) + piper-tts (TTS) |
+| Training | LoRA (PEFT) |
+| Avatar | OpenCV + Pillow |
 
-# Freeze requirements
-pip freeze > backend/requirements.txt
-```
+## License
 
-### Ollama
-
-```bash
-# Check status
-ollama list
-
-# Pull model
-ollama pull mistral:3b-instruct-q4_K_M
-
-# Serve
-ollama serve
-
-# Delete model
-ollama rm mistral:3b-instruct-q4_K_M
-```
-
----
-
-## 🖥️ Your System
-
-**Hardware:**
-
-- CPU: Intel i5-1155G7 (4 cores/8 threads)
-- RAM: 16 GB DDR4
-- Storage: 290 GB free
-- GPU: Intel Iris Xe (integrated)
-- OS: Ubuntu
-
-**Impact:**
-
-- Using Mistral 3B (quantized) instead of 7B
-- Expected 5-10 second responses
-- CPU-bound, but acceptable for personal use
-- Upgrade GPU later if desired (code unchanged)
-
----
-
-## 🐛 Troubleshooting
-
-### "Cannot connect to Ollama"
-
-```bash
-# Ensure Ollama is running
-ollama serve
-
-# Check connection
-curl -s http://localhost:11434/api/tags
-```
-
-### "No module named 'fastapi'"
-
-```bash
-source backend/venv/bin/activate
-pip install -r backend/requirements.txt
-```
-
-### "Port 8000 already in use"
-
-```bash
-# Kill existing process
-lsof -ti:8000 | xargs kill -9
-
-# Or change port in backend/config.py
-```
-
-### Python version issues
-
-```bash
-# Check version
-python3 --version
-
-# Must be 3.8+
-```
-
-See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for more.
-
----
-
-## 📖 For New AI Agents/Copilots
-
-**Quick onboard (10 min):**
-
-1. Read [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) (5 min)
-2. Read [PHASE_STATUS.md](PHASE_STATUS.md) (2 min)
-3. Read relevant folder's README.md (3 min)
-4. Check [.instructions.md](.instructions.md) if doing setup
-
-**Don't re-read code from scratch.** Use the docs. If context is missing, they point to the right place.
-
----
-
-## 🎯 Next Immediate Steps
-
-1. **Run setup:** `bash scripts/setup.sh`
-2. **Install Ollama:** `bash scripts/install-ollama.sh`
-3. **Download model:** `ollama pull mistral:3b-instruct-q4_K_M`
-4. **Start services:** Follow Quick Start section
-5. **Test API:** `curl http://localhost:8000/health`
-6. **Check status:** `curl http://localhost:8000/chat` with a message
-
----
-
-## 📝 License
-
-Personal project - All open-source dependencies used per their licenses.
-
----
-
-## ❓ Questions?
-
-- Read [.instructions.md](.instructions.md) for detailed setup
-- Check [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for common issues
-- See [PROJECT_PLAN.md](PROJECT_PLAN.md) for full technical specs
-- Update [PHASE_STATUS.md](PHASE_STATUS.md) when making progress
-
----
-
-**Ready?** Let's build! 🚀
-
-```bash
-bash scripts/setup.sh
-```
+MIT
