@@ -89,8 +89,8 @@ export const imageFromTrained = (prompt: string, lora_path: string, trigger_word
 
 // --- Video ---
 
-export const generateVideo = (prompt: string, steps = 40, frames = 24) =>
-    post("/video/generate", { prompt, steps, frames });
+export const generateVideo = (prompt: string, model = "zeroscope", frames = 24) =>
+    post("/video/generate", { prompt, model, frames });
 
 export async function videoFromImage(image: File, prompt = "", steps = 40, frames = 24) {
     const form = new FormData();
@@ -108,9 +108,7 @@ export async function enhanceAudio(audio: File, noise_reduce = true, normalize =
     form.append("audio", audio);
     form.append("noise_reduce", noise_reduce.toString());
     form.append("normalize", normalize.toString());
-    const res = await fetch(`${API}/audio/enhance`, { method: "POST", body: form });
-    if (!res.ok) throw new Error("Audio enhancement failed");
-    return res.blob();
+    return postForm("/audio/enhance", form);
 }
 
 export const generateMusic = (prompt: string, duration = 10.0) =>
@@ -135,15 +133,15 @@ export async function animateAvatar(text = "", duration = 5.0) {
 
 // --- Training ---
 
-export async function uploadTrainingData(files: File[], dataset = "default") {
+export async function uploadTrainingData(files: FileList | File[], dataset = "default") {
     const form = new FormData();
-    files.forEach((f) => form.append("files", f));
+    Array.from(files).forEach((f) => form.append("files", f));
     form.append("dataset", dataset);
     return postForm("/train/upload", form);
 }
 
-export const startTraining = (opts: { dataset?: string; name?: string; trigger_word?: string; steps?: number } = {}) =>
-    post("/train/start", { dataset: "default", name: "my_lora", trigger_word: "astra_subject", steps: 500, ...opts });
+export const startTraining = (dataset: string, name: string, steps = 500, trigger_word = "astra_subject") =>
+    post("/train/start", { dataset, name, trigger_word, steps });
 
 export const getTrainingStatus = (jobId: string) => get(`/train/status/${jobId}`);
 export const getTrainingJobs = () => get("/train/jobs");

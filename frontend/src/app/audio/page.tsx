@@ -41,12 +41,12 @@ export default function AudioPage() {
         <div className="flex h-full flex-col">
             <header className="page-header">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-subtle">
-                        <Music className="h-4 w-4 text-accent" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--color-accent-subtle)" }}>
+                        <Music className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
                     </div>
                     <div>
-                        <h1 className="text-[15px] font-semibold">Audio Studio</h1>
-                        <p className="text-[11px] text-muted">Generate music &amp; enhance audio</p>
+                        <h1 className="text-[15px] font-semibold" style={{ color: "var(--color-text)" }}>Audio Studio</h1>
+                        <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Generate music &amp; enhance audio</p>
                     </div>
                 </div>
             </header>
@@ -67,7 +67,7 @@ export default function AudioPage() {
                     {tab === "generate" && (
                         <div className="space-y-4">
                             <div>
-                                <label className="mb-1.5 block text-sm text-muted">Prompt</label>
+                                <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Prompt</label>
                                 <textarea
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
@@ -77,7 +77,7 @@ export default function AudioPage() {
                                 />
                             </div>
                             <div>
-                                <label className="mb-1.5 block text-sm text-muted">Duration: {duration}s</label>
+                                <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Duration: {duration}s</label>
                                 <input type="range" min={5} max={60} value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="w-full mt-1" />
                             </div>
                         </div>
@@ -85,7 +85,7 @@ export default function AudioPage() {
 
                     {tab === "enhance" && (
                         <div>
-                            <label className="mb-1.5 block text-sm text-muted">Audio File</label>
+                            <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Audio File</label>
                             <input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] || null)} className="file-input" />
                         </div>
                     )}
@@ -95,13 +95,13 @@ export default function AudioPage() {
                         {loading ? "Processing..." : tab === "generate" ? "Generate Music" : "Enhance Audio"}
                     </button>
 
-                    {error && <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-2.5 text-sm text-error">{error}</div>}
+                    {error && <div className="alert alert-error">{error}</div>}
 
                     {result && (
                         <div className="card p-4 space-y-3 animate-in-scale">
                             <audio src={result} controls className="w-full" />
                             <div className="flex items-center justify-between">
-                                <p className="text-xs text-muted truncate flex-1 mr-4">{tab === "generate" ? prompt : "Enhanced audio"}</p>
+                                <p className="text-xs truncate flex-1 mr-4" style={{ color: "var(--color-muted)" }}>{tab === "generate" ? prompt : "Enhanced audio"}</p>
                                 <a href={result} download className="btn-ghost !px-3 !py-1.5 !text-xs">
                                     <Download className="h-3.5 w-3.5" /> Download
                                 </a>

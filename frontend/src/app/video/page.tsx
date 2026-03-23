@@ -42,19 +42,18 @@ export default function VideoPage() {
         <div className="flex h-full flex-col">
             <header className="page-header">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-subtle">
-                        <Video className="h-4 w-4 text-accent" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--color-accent-subtle)" }}>
+                        <Video className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
                     </div>
                     <div>
-                        <h1 className="text-[15px] font-semibold">Video Generation</h1>
-                        <p className="text-[11px] text-muted">Create videos with AI</p>
+                        <h1 className="text-[15px] font-semibold" style={{ color: "var(--color-text)" }}>Video Generation</h1>
+                        <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Create videos with AI</p>
                     </div>
                 </div>
             </header>
 
             <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
                 <div className="mx-auto max-w-2xl space-y-5 animate-slide-up">
-                    {/* Tabs */}
                     <div className="tab-bar">
                         <button onClick={() => setTab("text")} className={clsx("tab-item", tab === "text" && "tab-active")}>
                             <Wand2 className="h-4 w-4" />
@@ -66,9 +65,8 @@ export default function VideoPage() {
                         </button>
                     </div>
 
-                    {/* Prompt */}
                     <div>
-                        <label className="mb-1.5 block text-sm text-muted">Prompt</label>
+                        <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Prompt</label>
                         <textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
@@ -81,7 +79,7 @@ export default function VideoPage() {
                     {tab === "text" && (
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="mb-1.5 block text-sm text-muted">Model</label>
+                                <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Model</label>
                                 <select value={model} onChange={(e) => setModel(e.target.value)} className="input-base">
                                     <option value="zeroscope">Zeroscope</option>
                                     <option value="modelscope">ModelScope</option>
@@ -89,7 +87,7 @@ export default function VideoPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="mb-1.5 block text-sm text-muted">Frames: {numFrames}</label>
+                                <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Frames: {numFrames}</label>
                                 <input type="range" min={8} max={64} step={4} value={numFrames} onChange={(e) => setNumFrames(Number(e.target.value))} className="w-full mt-2" />
                             </div>
                         </div>
@@ -98,11 +96,11 @@ export default function VideoPage() {
                     {tab === "img2vid" && (
                         <div className="space-y-4">
                             <div>
-                                <label className="mb-1.5 block text-sm text-muted">Source Image</label>
+                                <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Source Image</label>
                                 <input type="file" accept="image/*" onChange={(e) => setSourceFile(e.target.files?.[0] || null)} className="file-input" />
                             </div>
                             <div>
-                                <label className="mb-1.5 block text-sm text-muted">Frames: {numFrames}</label>
+                                <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Frames: {numFrames}</label>
                                 <input type="range" min={8} max={64} step={4} value={numFrames} onChange={(e) => setNumFrames(Number(e.target.value))} className="w-full mt-1" />
                             </div>
                         </div>
@@ -113,13 +111,13 @@ export default function VideoPage() {
                         {loading ? "Generating..." : "Generate"}
                     </button>
 
-                    {error && <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-2.5 text-sm text-error">{error}</div>}
+                    {error && <div className="alert alert-error">{error}</div>}
 
                     {result && (
-                        <div className="overflow-hidden rounded-xl border border-border animate-in-scale">
+                        <div className="overflow-hidden rounded-xl border animate-in-scale" style={{ borderColor: "var(--color-border)" }}>
                             <video src={result} controls className="w-full" />
-                            <div className="flex items-center justify-between bg-surface px-4 py-3">
-                                <p className="text-xs text-muted truncate flex-1 mr-4">{prompt}</p>
+                            <div className="flex items-center justify-between px-4 py-3" style={{ background: "var(--color-surface)" }}>
+                                <p className="text-xs truncate flex-1 mr-4" style={{ color: "var(--color-muted)" }}>{prompt}</p>
                                 <a href={result} download className="btn-ghost !px-3 !py-1.5 !text-xs">
                                     <Download className="h-3.5 w-3.5" /> Download
                                 </a>

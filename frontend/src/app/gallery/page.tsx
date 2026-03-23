@@ -51,12 +51,12 @@ export default function GalleryPage() {
         <div className="flex h-full flex-col">
             <header className="page-header">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-subtle">
-                        <LayoutGrid className="h-4 w-4 text-accent" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--color-accent-subtle)" }}>
+                        <LayoutGrid className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
                     </div>
                     <div>
-                        <h1 className="text-[15px] font-semibold">Gallery</h1>
-                        <p className="text-[11px] text-muted">Browse your generated media</p>
+                        <h1 className="text-[15px] font-semibold" style={{ color: "var(--color-text)" }}>Gallery</h1>
+                        <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Browse your generated media</p>
                     </div>
                 </div>
             </header>
@@ -74,14 +74,14 @@ export default function GalleryPage() {
 
                     {loading && (
                         <div className="flex items-center justify-center py-20">
-                            <Loader2 className="h-6 w-6 animate-spin text-accent" />
+                            <Loader2 className="h-6 w-6 animate-spin" style={{ color: "var(--color-accent)" }} />
                         </div>
                     )}
 
-                    {error && <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-2.5 text-sm text-error">{error}</div>}
+                    {error && <div className="alert alert-error">{error}</div>}
 
                     {!loading && !error && items.length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-20 text-muted">
+                        <div className="empty-state">
                             <LayoutGrid className="h-10 w-10 mb-3 opacity-30" />
                             <p className="text-sm">No {tab} yet</p>
                             <p className="text-xs mt-1 opacity-60">Generate some content to see it here</p>
@@ -100,7 +100,7 @@ export default function GalleryPage() {
                                             </a>
                                         </div>
                                     </div>
-                                    {item.prompt && <p className="px-3 py-2 text-[11px] text-muted truncate">{item.prompt}</p>}
+                                    {item.prompt && <p className="px-3 py-2 text-[11px] truncate" style={{ color: "var(--color-muted)" }}>{item.prompt}</p>}
                                 </div>
                             ))}
                         </div>
@@ -112,7 +112,7 @@ export default function GalleryPage() {
                                 <div key={item.id} className="card overflow-hidden !p-0 animate-in-scale">
                                     <video src={`${baseUrl}${item.url}`} controls className="w-full aspect-video" />
                                     <div className="flex items-center justify-between px-3 py-2">
-                                        <p className="text-[11px] text-muted truncate flex-1 mr-2">{item.prompt || item.filename}</p>
+                                        <p className="text-[11px] truncate flex-1 mr-2" style={{ color: "var(--color-muted)" }}>{item.prompt || item.filename}</p>
                                         <a href={`${baseUrl}${item.url}`} download className="btn-ghost !px-2 !py-1 !text-[11px]">
                                             <Download className="h-3 w-3" />
                                         </a>
@@ -126,8 +126,8 @@ export default function GalleryPage() {
                         <div className="space-y-3">
                             {items.map((item) => (
                                 <div key={item.id} className="card flex items-center gap-4 animate-in-scale">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-subtle">
-                                        <Music className="h-4 w-4 text-accent" />
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ background: "var(--color-accent-subtle)" }}>
+                                        <Music className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm truncate">{item.prompt || item.filename}</p>

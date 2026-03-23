@@ -81,9 +81,9 @@ export default function TrainPage() {
 
     const statusIcon = (s: string) => {
         if (s === "completed") return <CheckCircle className="h-4 w-4 text-green-400" />;
-        if (s === "failed") return <XCircle className="h-4 w-4 text-error" />;
-        if (s === "running") return <Loader2 className="h-4 w-4 animate-spin text-accent" />;
-        return <Clock className="h-4 w-4 text-muted" />;
+        if (s === "failed") return <XCircle className="h-4 w-4" style={{ color: "var(--color-error)" }} />;
+        if (s === "running") return <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--color-accent)" }} />;
+        return <Clock className="h-4 w-4" style={{ color: "var(--color-muted)" }} />;
     };
 
     const tabs: { key: Tab; label: string; icon: typeof Upload }[] = [
@@ -96,12 +96,12 @@ export default function TrainPage() {
         <div className="flex h-full flex-col">
             <header className="page-header">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-subtle">
-                        <GraduationCap className="h-4 w-4 text-accent" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--color-accent-subtle)" }}>
+                        <GraduationCap className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
                     </div>
                     <div>
-                        <h1 className="text-[15px] font-semibold">Training</h1>
-                        <p className="text-[11px] text-muted">Fine-tune models with LoRA</p>
+                        <h1 className="text-[15px] font-semibold" style={{ color: "var(--color-text)" }}>Training</h1>
+                        <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Fine-tune models with LoRA</p>
                     </div>
                 </div>
             </header>
@@ -117,14 +117,13 @@ export default function TrainPage() {
                         ))}
                     </div>
 
-                    {error && <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-2.5 text-sm text-error">{error}</div>}
-                    {info && <div className="rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-2.5 text-sm text-green-400">{info}</div>}
+                    {error && <div className="alert alert-error">{error}</div>}
+                    {info && <div className="alert alert-success">{info}</div>}
 
                     {tab === "upload" && (
                         <div className="space-y-5">
-                            {/* Step 1: Upload */}
                             <div className="card space-y-4">
-                                <h2 className="text-sm font-medium flex items-center gap-2">
+                                <h2 className="text-sm font-medium flex items-center gap-2" style={{ color: "var(--color-text)" }}>
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full gradient-accent text-[11px] font-bold text-white">1</span>
                                     Upload Training Data
                                 </h2>
@@ -135,19 +134,18 @@ export default function TrainPage() {
                                 </button>
                             </div>
 
-                            {/* Step 2: Configure & Start */}
                             <div className={clsx("card space-y-4 transition-opacity", !datasetId && "opacity-40 pointer-events-none")}>
-                                <h2 className="text-sm font-medium flex items-center gap-2">
+                                <h2 className="text-sm font-medium flex items-center gap-2" style={{ color: "var(--color-text)" }}>
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full gradient-accent text-[11px] font-bold text-white">2</span>
                                     Configure Training
                                 </h2>
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="mb-1.5 block text-sm text-muted">Model Name</label>
+                                        <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Model Name</label>
                                         <input type="text" value={modelName} onChange={(e) => setModelName(e.target.value)} placeholder="my_custom_model" className="input-base" />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block text-sm text-muted">Steps: {steps}</label>
+                                        <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Steps: {steps}</label>
                                         <input type="range" min={100} max={2000} step={100} value={steps} onChange={(e) => setSteps(Number(e.target.value))} className="w-full mt-2" />
                                     </div>
                                 </div>
@@ -162,7 +160,7 @@ export default function TrainPage() {
                     {tab === "jobs" && (
                         <div className="space-y-3">
                             {jobs.length === 0 && (
-                                <div className="flex flex-col items-center py-16 text-muted">
+                                <div className="empty-state">
                                     <Clock className="h-10 w-10 mb-3 opacity-30" />
                                     <p className="text-sm">No training jobs yet</p>
                                 </div>
@@ -171,11 +169,11 @@ export default function TrainPage() {
                                 <div key={job.id} className="card flex items-center gap-4">
                                     {statusIcon(job.status)}
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{job.model_name || job.id}</p>
-                                        <p className="text-xs text-muted capitalize">{job.status}{job.progress != null ? ` — ${job.progress}%` : ""}</p>
+                                        <p className="text-sm font-medium truncate" style={{ color: "var(--color-text)" }}>{job.model_name || job.id}</p>
+                                        <p className="text-xs capitalize" style={{ color: "var(--color-muted)" }}>{job.status}{job.progress != null ? ` — ${job.progress}%` : ""}</p>
                                     </div>
                                     {job.status === "running" && job.progress != null && (
-                                        <div className="w-20 h-1.5 rounded-full bg-surface overflow-hidden">
+                                        <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-surface)" }}>
                                             <div className="h-full gradient-accent rounded-full transition-all" style={{ width: `${job.progress}%` }} />
                                         </div>
                                     )}
@@ -187,21 +185,21 @@ export default function TrainPage() {
                     {tab === "models" && (
                         <div className="space-y-3">
                             {models.length === 0 && (
-                                <div className="flex flex-col items-center py-16 text-muted">
+                                <div className="empty-state">
                                     <Sparkles className="h-10 w-10 mb-3 opacity-30" />
                                     <p className="text-sm">No trained models yet</p>
                                 </div>
                             )}
                             {models.map((m) => (
                                 <div key={m.path} className="card flex items-center gap-4">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-subtle">
-                                        <Sparkles className="h-4 w-4 text-accent" />
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ background: "var(--color-accent-subtle)" }}>
+                                        <Sparkles className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{m.name}</p>
-                                        <p className="text-[11px] text-muted truncate">{m.path}</p>
+                                        <p className="text-sm font-medium truncate" style={{ color: "var(--color-text)" }}>{m.name}</p>
+                                        <p className="text-[11px] truncate" style={{ color: "var(--color-muted)" }}>{m.path}</p>
                                     </div>
-                                    <FolderOpen className="h-4 w-4 text-muted" />
+                                    <FolderOpen className="h-4 w-4" style={{ color: "var(--color-muted)" }} />
                                 </div>
                             ))}
                         </div>
