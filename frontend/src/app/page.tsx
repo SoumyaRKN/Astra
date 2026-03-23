@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useChat, Message } from "@/store/chat";
-import { sendMessage, getHealth } from "@/lib/api";
-import { Send, Loader2, User, Sparkles, Trash2, Zap, Code, Brain, ArrowUp } from "lucide-react";
+import { sendMessage, getHealth, getHistory, getSessions, clearHistory } from "@/lib/api";
+import { Send, Loader2, User, Sparkles, Trash2, Zap, Code, Brain, ArrowUp, ChevronDown, MessageSquare } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import TextareaAutosize from "react-textarea-autosize";
 import clsx from "clsx";
@@ -39,9 +39,11 @@ const suggestions = [
 ];
 
 export default function Home() {
-    const { messages, session, loading, error, addMessage, setLoading, setError, clearMessages } = useChat();
+    const { messages, session, loading, error, addMessage, setLoading, setError, clearMessages, setSession } = useChat();
     const [input, setInput] = useState("");
     const [health, setHealth] = useState<Health | null>(null);
+    const [sessions, setSessions] = useState<string[]>([]);
+    const [showSessions, setShowSessions] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -54,6 +56,35 @@ export default function Home() {
         const interval = setInterval(check, 30000);
         return () => clearInterval(interval);
     }, []);
+
+    // Load history from backend on mount and session change
+    useEffect(() => {
+        const loadHistory = async () => {
+            try {
+                const data = await getHistory(session);
+                const msgs = (data.messages || []).map((m: { role: string; content: string; timestamp: string }, i: number) => ({
+                    id: `h-${i}-${Date.now()}`,
+                    role: m.role as "user" | "assistant",
+                    content: m.content,
+                    timestamp: new Date(m.timestamp),
+                }));
+                if (msgs.length > 0) clearMessages();
+                msgs.forEach((m: Message) => addMessage(m));
+            } catch { /* no history yet */ }
+        };
+        loadHistory();
+    }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Load available sessions
+    useEffect(() => {
+        const loadSessions = async () => {
+            try {
+                const data = await getSessions();
+                setSessions(Array.isArray(data) ? data : data.sessions ?? []);
+            } catch { /* ignore */ }
+        };
+        loadSessions();
+    }, [messages.length]);
 
     useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
     useEffect(() => { inputRef.current?.focus(); }, []);
@@ -82,6 +113,17 @@ export default function Home() {
         if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
     };
 
+    const handleClear = async () => {
+        try { await clearHistory(session); } catch { /* ignore */ }
+        clearMessages();
+    };
+
+    const handleNewChat = () => {
+        const newId = `chat_${Date.now()}`;
+        setSession(newId);
+        setShowSessions(false);
+    };
+
     const isConnected = health?.ollama === true;
     const hasMessages = messages.length > 0;
 
@@ -91,19 +133,63 @@ export default function Home() {
             {/* ── Header ─────────────────────────────────── */}
             <header className="page-header shrink-0">
                 <div className="flex items-center gap-3">
-                    <div className="flex flex-col">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-[var(--color-surface-2)] border border-[var(--color-border)]">
+                        <MessageSquare className="h-4 w-4 text-[var(--color-text)]" />
+                    </div>
+                    <div>
                         <h1 className="text-[14px] font-semibold tracking-tight text-[var(--color-text)] leading-none">
                             {hasMessages ? "Chat" : "New Chat"}
                         </h1>
-                        {hasMessages && (
-                            <p className="text-[11px] text-[var(--color-muted)] mt-0.5 font-medium">
-                                {messages.length} {messages.length === 1 ? "message" : "messages"}
-                            </p>
-                        )}
+                        <p className="text-[11px] font-medium text-[var(--color-muted)] mt-0.5">
+                            {hasMessages
+                                ? `${messages.length} ${messages.length === 1 ? "message" : "messages"}`
+                                : "Powered by Ollama"}
+                        </p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {/* Session switcher */}
+                    {sessions.length > 1 && (
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowSessions(!showSessions)}
+                                className="btn-ghost gap-1.5"
+                            >
+                                <span className="hidden sm:inline text-[12px] truncate max-w-[100px]">{session}</span>
+                                <ChevronDown className={clsx("h-3 w-3 transition-transform", showSessions && "rotate-180")} />
+                            </button>
+                            {showSessions && (
+                                <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setShowSessions(false)} />
+                                    <div className="absolute right-0 top-full mt-1 w-52 rounded-[12px] bg-[var(--color-surface-2)] border border-[var(--color-border)] shadow-xl p-1.5 z-50 animate-in-scale">
+                                        <button
+                                            onClick={handleNewChat}
+                                            className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-[13px] font-medium text-[var(--color-accent)] hover:bg-[var(--color-hover)] transition-colors"
+                                        >
+                                            <Sparkles className="h-3.5 w-3.5" /> New Chat
+                                        </button>
+                                        <div className="h-px bg-[var(--color-border)] my-1" />
+                                        {sessions.map((s) => (
+                                            <button
+                                                key={s}
+                                                onClick={() => { setSession(s); setShowSessions(false); }}
+                                                className={clsx(
+                                                    "flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-[13px] font-medium transition-colors truncate",
+                                                    s === session
+                                                        ? "bg-[var(--color-surface-3)] text-[var(--color-text)]"
+                                                        : "text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text)]"
+                                                )}
+                                            >
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
                     {/* Connection badge */}
                     <div className={clsx("status-badge", isConnected ? "status-online" : "status-offline")}>
                         <span className={clsx(
@@ -119,7 +205,7 @@ export default function Home() {
 
                     {hasMessages && (
                         <button
-                            onClick={clearMessages}
+                            onClick={handleClear}
                             className="btn-ghost gap-1.5"
                             title="Clear chat"
                         >

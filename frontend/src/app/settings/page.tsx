@@ -8,9 +8,10 @@ import clsx from "clsx";
 
 interface SystemInfo {
     status?: string;
-    llm_model?: string;
+    name?: string;
     version?: string;
-    uptime?: string;
+    ollama?: { model?: string; url?: string };
+    llm?: { context?: number; temperature?: number; max_tokens?: number };
 }
 
 export default function SettingsPage() {
@@ -71,12 +72,12 @@ export default function SettingsPage() {
         { key: "system", label: "System", icon: Monitor, desc: "Follows OS" },
     ];
 
-    const isOnline = systemInfo.status === "ok";
+    const isOnline = systemInfo.status === "healthy";
 
     return (
         <div className="flex h-full flex-col bg-[var(--color-bg)] transition-colors duration-500">
             {/* Header */}
-            <header className="page-header border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-xl z-30">
+            <header className="page-header">
                 <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-[var(--color-surface-2)] border border-[var(--color-border)]">
                         <Settings className="h-4 w-4 text-[var(--color-text)]" />
@@ -164,9 +165,9 @@ export default function SettingsPage() {
                         ) : (
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                 {[
-                                    { icon: Server, label: "Backend", value: systemInfo.status === "ok" ? "Connected" : "Disconnected" },
-                                    { icon: Cpu, label: "LLM Model", value: systemInfo.llm_model || "mistral" },
-                                    { icon: HardDrive, label: "Version", value: systemInfo.version || "1.0.0" },
+                                    { icon: Server, label: "Backend", value: isOnline ? "Connected" : "Disconnected" },
+                                    { icon: Cpu, label: "LLM Model", value: systemInfo.ollama?.model || "mistral" },
+                                    { icon: HardDrive, label: "Version", value: systemInfo.version || "2.0.0" },
                                     { icon: RefreshCw, label: "API", value: "127.0.0.1:8000" },
                                 ].map(({ icon: Icon, label, value }) => (
                                     <div key={label} className="rounded-[12px] p-4 bg-[var(--color-surface-2)] border border-[var(--color-border)]">
