@@ -137,6 +137,7 @@ class ImageFromTrainedRequest(BaseModel):
 
 class VideoRequest(BaseModel):
     prompt: str
+    model: str = "zeroscope"
     steps: int = 40
     frames: int = 24
     width: int = 576
@@ -410,6 +411,7 @@ async def generate_video(req: VideoRequest):
         gen = get_video_gen()
         path = gen.generate(
             prompt=req.prompt,
+            model=req.model,
             steps=req.steps,
             frames=req.frames,
             width=req.width,
@@ -468,7 +470,7 @@ async def enhance_audio(
 
         svc = get_audio()
         path = svc.enhance(str(src), noise_reduce=noise_reduce, normalize=normalize)
-        return FileResponse(path, media_type="audio/wav", filename="enhanced.wav")
+        return {"path": path, "url": f"/storage/{Path(path).relative_to('storage')}"}
     except Exception as e:
         logger.error(f"Audio enhance error: {e}")
         raise HTTPException(500, f"Audio enhancement failed: {e}")

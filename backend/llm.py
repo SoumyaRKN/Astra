@@ -9,6 +9,12 @@ from memory import Memory
 
 logger = logging.getLogger(__name__)
 
+SYSTEM_PROMPT = (
+    "You are Astra, a helpful local AI assistant. "
+    "Be concise, friendly, and accurate. "
+    "Answer the user's question directly without generating follow-up conversations."
+)
+
 
 class LLM:
     """Chat service powered by Ollama."""
@@ -19,6 +25,7 @@ class LLM:
         self.temperature = settings.LLM_TEMPERATURE
         self.max_tokens = settings.LLM_MAX_TOKENS
         self.top_p = settings.LLM_TOP_P
+        self.context_window = settings.LLM_CONTEXT
         self.timeout = aiohttp.ClientTimeout(total=settings.OLLAMA_TIMEOUT)
         self.memory = Memory()
         logger.info(f"LLM ready — model: {self.model}, url: {self.url}")
@@ -32,21 +39,24 @@ class LLM:
             logger.warning(f"Ollama unreachable: {e}")
             return False
 
+    def _build_messages(self, message: str, session: str, use_history: bool) -> list:
+        """Build Ollama chat messages array from memory history."""
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        if use_history:
+            for m in self.memory.history(session):
+                messages.append({"role": m["role"], "content": m["content"]})
+        messages.append({"role": "user", "content": message})
+        return messages
+
     async def chat(
         self, message: str, session: str = "default", use_history: bool = True
     ) -> dict:
         start = time.time()
 
-        context = self.memory.context(session) if use_history else ""
-        prompt = (
-            f"{context}\n\nUser: {message}\nAssistant:"
-            if context
-            else f"User: {message}\nAssistant:"
-        )
-
+        messages = self._build_messages(message, session, use_history)
         logger.info(f"[{session}] Sending to Ollama: {message[:80]}...")
 
-        text = await self._generate(prompt)
+        text = await self._chat_completion(messages)
 
         self.memory.add(session, "user", message)
         self.memory.add(session, "assistant", text)
@@ -60,14 +70,43 @@ class LLM:
             "time_ms": elapsed,
         }
 
-    async def _generate(self, prompt: str) -> str:
+    async def _chat_completion(self, messages: list) -> str:
+        """Send messages to Ollama /api/chat endpoint."""
+        async with aiohttp.ClientSession(timeout=self.timeout) as s:
+            payload = {
+                "model": self.model,
+                "messages": messages,
+                "stream": False,
+                "options": {
+                    "temperature": self.temperature,
+                    "top_p": self.top_p,
+                    "num_predict": self.max_tokens,
+                    "num_ctx": self.context_window,
+                },
+            }
+            async with s.post(f"{self.url}/api/chat", json=payload) as r:
+                if r.status != 200:
+                    err = await r.text()
+                    raise RuntimeError(f"Ollama error ({r.status}): {err}")
+                data = await r.json()
+                text = data.get("message", {}).get("content", "").strip()
+                if not text:
+                    text = "I couldn't generate a response. Please try again."
+                return text
+
+    async def generate(self, prompt: str) -> str:
+        """Raw generation via /api/generate (used by voice pipeline)."""
         async with aiohttp.ClientSession(timeout=self.timeout) as s:
             payload = {
                 "model": self.model,
                 "prompt": prompt,
-                "temperature": self.temperature,
-                "top_p": self.top_p,
                 "stream": False,
+                "options": {
+                    "temperature": self.temperature,
+                    "top_p": self.top_p,
+                    "num_predict": self.max_tokens,
+                    "num_ctx": self.context_window,
+                },
             }
             async with s.post(f"{self.url}/api/generate", json=payload) as r:
                 if r.status != 200:
@@ -84,9 +123,13 @@ class LLM:
             payload = {
                 "model": self.model,
                 "prompt": prompt,
-                "temperature": self.temperature,
-                "top_p": self.top_p,
                 "stream": True,
+                "options": {
+                    "temperature": self.temperature,
+                    "top_p": self.top_p,
+                    "num_predict": self.max_tokens,
+                    "num_ctx": self.context_window,
+                },
             }
             async with s.post(f"{self.url}/api/generate", json=payload) as r:
                 if r.status != 200:

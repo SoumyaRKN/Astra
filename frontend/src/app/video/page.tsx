@@ -29,7 +29,7 @@ export default function VideoPage() {
                 res = await generateVideo(prompt, model, numFrames);
             } else {
                 if (!sourceFile) throw new Error("Select a source image");
-                res = await videoFromImage(sourceFile, prompt, numFrames);
+                res = await videoFromImage(sourceFile, prompt, 40, numFrames);
             }
             setResult(`http://127.0.0.1:8000${res.url}`);
         } catch (e) {
@@ -85,7 +85,6 @@ export default function VideoPage() {
                                 <select value={model} onChange={(e) => setModel(e.target.value)} className="input-base">
                                     <option value="zeroscope">Zeroscope</option>
                                     <option value="modelscope">ModelScope</option>
-                                    <option value="svd">Stable Video Diffusion</option>
                                 </select>
                             </div>
                             <div>

@@ -141,9 +141,10 @@ class Trainer:
             # Training loop
             from torchvision import transforms
 
+            resolution = 512
             transform = transforms.Compose(
                 [
-                    transforms.Resize((512, 512)),
+                    transforms.Resize((resolution, resolution)),
                     transforms.ToTensor(),
                     transforms.Normalize([0.5], [0.5]),
                 ]
@@ -163,17 +164,49 @@ class Trainer:
                     timesteps = torch.randint(0, 1000, (1,), device=self._device).long()
                     noisy = pipe.scheduler.add_noise(latents, noise, timesteps)
 
-                text_inputs = pipe.tokenizer(
-                    job["trigger_word"],
+                # SDXL: encode with both text encoders
+                prompt_text = job["trigger_word"]
+
+                # Text encoder 1
+                text_inputs_1 = pipe.tokenizer(
+                    prompt_text,
                     return_tensors="pt",
                     padding="max_length",
-                    max_length=77,
+                    max_length=pipe.tokenizer.model_max_length,
                     truncation=True,
                 ).to(self._device)
-                text_embeds = pipe.text_encoder(text_inputs.input_ids)[0]
+                text_output_1 = pipe.text_encoder(text_inputs_1.input_ids, output_hidden_states=True)
+                text_embeds_1 = text_output_1.hidden_states[-2]
+
+                # Text encoder 2
+                text_inputs_2 = pipe.tokenizer_2(
+                    prompt_text,
+                    return_tensors="pt",
+                    padding="max_length",
+                    max_length=pipe.tokenizer_2.model_max_length,
+                    truncation=True,
+                ).to(self._device)
+                text_output_2 = pipe.text_encoder_2(text_inputs_2.input_ids, output_hidden_states=True)
+                text_embeds_2 = text_output_2.hidden_states[-2]
+                pooled_prompt_embeds = text_output_2[0]
+
+                # Concatenate hidden states from both encoders
+                encoder_hidden_states = torch.cat([text_embeds_1, text_embeds_2], dim=-1)
+
+                # SDXL time_ids: (original_size_h, original_size_w, crop_top, crop_left, target_h, target_w)
+                add_time_ids = torch.tensor(
+                    [[resolution, resolution, 0, 0, resolution, resolution]],
+                    dtype=dtype, device=self._device,
+                )
+                added_cond_kwargs = {
+                    "text_embeds": pooled_prompt_embeds,
+                    "time_ids": add_time_ids,
+                }
 
                 noise_pred = unet(
-                    noisy, timesteps, encoder_hidden_states=text_embeds
+                    noisy, timesteps,
+                    encoder_hidden_states=encoder_hidden_states,
+                    added_cond_kwargs=added_cond_kwargs,
                 ).sample
                 loss = torch.nn.functional.mse_loss(noise_pred, noise)
 

@@ -56,11 +56,19 @@ class ImageGen:
             return self._pipeline
 
         import torch
-        from diffusers import StableDiffusionPipeline, EulerDiscreteScheduler
+        from diffusers import (
+            StableDiffusionPipeline,
+            StableDiffusionXLPipeline,
+            EulerDiscreteScheduler,
+        )
 
         logger.info(f"Loading {self.model_key} ({MODELS[self.model_key]['size']})...")
         dtype = torch.float16 if self._device == "cuda" else torch.float32
-        self._pipeline = StableDiffusionPipeline.from_pretrained(
+
+        is_xl = self.model_key in ("sdxl", "sdxl-turbo")
+        pipeline_cls = StableDiffusionXLPipeline if is_xl else StableDiffusionPipeline
+
+        self._pipeline = pipeline_cls.from_pretrained(
             self.model_id, torch_dtype=dtype
         )
         self._pipeline = self._pipeline.to(self._device)
@@ -75,6 +83,7 @@ class ImageGen:
     def generate(
         self,
         prompt: str,
+        model: Optional[str] = None,
         negative: str = "blurry, low quality, distorted",
         steps: int = 50,
         guidance: float = 7.5,
@@ -85,6 +94,12 @@ class ImageGen:
     ) -> str:
         """Generate image from text prompt. Returns path to saved image."""
         import torch
+
+        # Switch model if a different one is requested
+        if model and model != self.model_key and model in MODELS:
+            self.model_key = model
+            self.model_id = MODELS[model]["name"]
+            self._pipeline = None  # Force reload with new model
 
         start = time.time()
         logger.info(
@@ -165,8 +180,12 @@ class ImageGen:
         self,
         prompt: str,
         lora_path: str,
+        trigger_word: str = "astra_subject",
         steps: int = 50,
         guidance: float = 7.5,
+        width: int = 512,
+        height: int = 512,
+        seed: Optional[int] = None,
         output: Optional[str] = None,
     ) -> str:
         """Generate image using a fine-tuned LoRA model from training."""
@@ -178,9 +197,18 @@ class ImageGen:
         pipe = self._load_pipeline()
         pipe.load_lora_weights(lora_path)
 
+        # Prepend trigger word if not already in prompt
+        full_prompt = f"{trigger_word} {prompt}" if trigger_word and trigger_word not in prompt else prompt
+        gen = torch.Generator(device=self._device).manual_seed(seed) if seed else None
+
         with torch.no_grad():
             result = pipe(
-                prompt=prompt, num_inference_steps=steps, guidance_scale=guidance
+                prompt=full_prompt,
+                num_inference_steps=steps,
+                guidance_scale=guidance,
+                width=width,
+                height=height,
+                generator=gen,
             )
         image = result.images[0]
 

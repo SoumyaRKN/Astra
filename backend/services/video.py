@@ -30,6 +30,7 @@ class VideoGen:
         self.storage = Path(storage)
         self.storage.mkdir(parents=True, exist_ok=True)
         self._pipeline = None
+        self._svd_pipeline = None
         self._device = None
         self._init_device()
         logger.info(f"VideoGen ready — model: {model}, device: {self._device}")
@@ -65,6 +66,7 @@ class VideoGen:
     def generate(
         self,
         prompt: str,
+        model: Optional[str] = None,
         steps: int = 40,
         frames: int = 24,
         width: int = 576,
@@ -75,6 +77,12 @@ class VideoGen:
         """Generate video from text prompt. Returns path to MP4."""
         import torch
         from diffusers.utils import export_to_video
+
+        # Switch model if a different one is requested
+        if model and model != self.model_key and model in MODELS:
+            self.model_key = model
+            self.model_id = MODELS[model]["name"]
+            self._pipeline = None  # Force reload with new model
 
         start = time.time()
         logger.info(f"Generating video: '{prompt[:50]}...' ({frames} frames)")
@@ -119,16 +127,17 @@ class VideoGen:
         start = time.time()
         logger.info(f"Image-to-video: {source}")
 
-        dtype = torch.float16 if self._device == "cuda" else torch.float32
-        pipe = StableVideoDiffusionPipeline.from_pretrained(
-            "stabilityai/stable-video-diffusion-img2vid-xt", torch_dtype=dtype
-        )
-        pipe = pipe.to(self._device)
+        if self._svd_pipeline is None:
+            dtype = torch.float16 if self._device == "cuda" else torch.float32
+            self._svd_pipeline = StableVideoDiffusionPipeline.from_pretrained(
+                "stabilityai/stable-video-diffusion-img2vid-xt", torch_dtype=dtype
+            )
+            self._svd_pipeline = self._svd_pipeline.to(self._device)
 
         src_image = Image.open(source).convert("RGB").resize((1024, 576))
 
         with torch.no_grad():
-            result = pipe(src_image, num_inference_steps=steps, num_frames=frames)
+            result = self._svd_pipeline(src_image, num_inference_steps=steps, num_frames=frames)
 
         if output is None:
             output = str(self.storage / f"i2v_{int(time.time())}.mp4")
@@ -145,6 +154,7 @@ class VideoGen:
             "model": self.model_key,
             "device": self._device,
             "loaded": self._pipeline is not None,
+            "svd_loaded": self._svd_pipeline is not None,
             "models": {
                 k: {"size": v["size"], "speed": v["speed"]} for k, v in MODELS.items()
             },

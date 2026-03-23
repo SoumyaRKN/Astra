@@ -61,3 +61,14 @@ class STT:
 
     def info(self) -> dict:
         return {"model": self.size, "loaded": self._model is not None}
+
+
+# Lazy singleton
+_stt = None
+
+
+def get_stt() -> STT:
+    global _stt
+    if _stt is None:
+        _stt = STT()
+    return _stt

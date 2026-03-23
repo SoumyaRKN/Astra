@@ -1,5 +1,6 @@
 """Voice Pipeline — STT → LLM → TTS orchestration for voice chat."""
 
+import base64
 import io
 import time
 import logging
@@ -51,10 +52,12 @@ class Voice:
 
         elapsed = (time.time() - start) * 1000
 
+        audio_b64 = base64.b64encode(response_audio).decode("utf-8")
+
         return {
             "user_text": user_text,
             "response": response_text,
-            "audio": response_audio,
+            "audio": audio_b64,
             "language": lang,
             "time_ms": elapsed,
         }

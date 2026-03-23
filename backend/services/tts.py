@@ -74,3 +74,14 @@ class TTS:
 
     def info(self) -> dict:
         return {"engine": self._engine}
+
+
+# Lazy singleton
+_tts = None
+
+
+def get_tts() -> TTS:
+    global _tts
+    if _tts is None:
+        _tts = TTS()
+    return _tts
