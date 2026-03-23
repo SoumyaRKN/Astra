@@ -1,0 +1,54 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+langchain==0.1.0
+langchain-community==0.0.10
+ollama==0.0.1
+websockets==12.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+aiofiles==23.2.1
+
+# Phase 2: Voice & Voice Cloning
+openai-whisper>=20231105
+torch>=2.0.0
+torchaudio>=2.0.0
+librosa>=0.10.0
+scipy>=1.11.0
+numpy>=1.24.0
+
+# Phase 3: Avatar Animation
+# LivePortrait framework for animated talking head synthesis
+# Note: liveportrait requires conda installation or build from source
+opencv-python>=4.8.0
+pillow>=10.0.0
+imageio>=2.34.0
+imageio-ffmpeg>=0.4.9  # Use compatible version (0.6.0 max available)
+scikit-image>=0.22.0
+loguru>=0.7.0
+
+# Audio processing for lip-sync
+audioread>=3.0.0
+
+# Phase 4: Image & Video Generation
+# Stable Diffusion for image generation
+diffusers>=0.25.0
+transformers>=4.34.0
+safetensors>=0.4.0
+accelerate>=0.24.0
+
+# Video generation models
+# HunyuanVideo, ModelScope, Zeroscope via diffusers
+# imageio already included above
+# ffmpeg-python compatibility issues; using system ffmpeg instead
+
+# Additional utilities for Phase 4
+huggingface-hub>=0.18.0
+
+# Phase 5: Audio Enhancement & Soundtrack Generation
+# Audio file I/O
+soundfile>=0.12.0
+# scipy and librosa already included above for audio processing
+# numpy already included for signal processing

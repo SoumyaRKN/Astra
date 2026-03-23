@@ -1,0 +1,107 @@
+# Docker Compose - Production Environment
+# Usage: docker compose -f docker-compose.prod.yml up -d
+# Latest version compatible with Docker Compose v5.1+
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: personal-ai-ollama-prod
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    volumes:
+      - ollama-data-prod:/root/.ollama
+    networks:
+      - personal-ai-prod
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+
+  db:
+    image: postgres:15-alpine
+    container_name: personal-ai-db-prod
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres-data-prod:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - personal-ai-prod
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: personal-ai-backend-prod
+    environment:
+      ENVIRONMENT: production
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      SECRET_KEY: ${SECRET_KEY}
+      API_KEY_ENABLED: ${API_KEY_ENABLED:-true}
+      LOG_LEVEL: INFO
+      CORS_ORIGINS: ${CORS_ORIGINS}
+    
+    depends_on:
+      - ollama
+      - db
+    
+    volumes:
+      - assets-prod:/app/assets
+    
+    networks:
+      - personal-ai-prod
+    
+    restart: always
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: personal-ai-frontend-prod
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+      NEXT_PUBLIC_ENVIRONMENT: production
+    
+    depends_on:
+      - backend
+    
+    networks:
+      - personal-ai-prod
+    
+    restart: always
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+volumes:
+  postgres-data-prod:
+  ollama-data-prod:
+  assets-prod:
+
+networks:
+  personal-ai-prod:
+    driver: bridge
