@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Mic, MicOff, Loader2, Bot, User } from "lucide-react";
 import { sendVoice, textToSpeech } from "@/lib/api";
 import clsx from "clsx";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface VoiceMessage {
     id: string;
@@ -74,9 +75,10 @@ export default function VoicePage() {
                         <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Speak with Astra</p>
                     </div>
                 </div>
+                <ThemeToggle />
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6">
+            <div className="flex-1 overflow-y-auto px-4 py-4 md:px-8 lg:px-12">
                 {messages.length === 0 ? (
                     <div className="flex h-full flex-col items-center justify-center gap-6 text-center animate-slide-up">
                         <div className="relative">
@@ -94,7 +96,7 @@ export default function VoicePage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="mx-auto max-w-2xl space-y-3">
+                    <div className="space-y-4">
                         {messages.map((msg) => (
                             <div key={msg.id} className={clsx("flex items-start gap-3 animate-in", msg.role === "user" && "flex-row-reverse")}>
                                 <div
@@ -104,7 +106,7 @@ export default function VoicePage() {
                                     {msg.role === "user" ? <User className="h-4 w-4" style={{ color: "var(--color-muted)" }} /> : <Bot className="h-4 w-4 text-white" />}
                                 </div>
                                 <div
-                                    className={clsx("rounded-2xl px-4 py-2.5 text-sm max-w-[80%]", msg.role === "user" ? "gradient-accent text-white rounded-tr-lg" : "glass rounded-tl-lg")}
+                                    className={clsx("rounded-2xl px-4 py-3 text-sm max-w-[75%] break-words", msg.role === "user" ? "gradient-accent text-white rounded-tr-lg" : "glass rounded-tl-lg")}
                                     style={msg.role !== "user" ? { color: "var(--color-text)" } : undefined}
                                 >
                                     {msg.text}

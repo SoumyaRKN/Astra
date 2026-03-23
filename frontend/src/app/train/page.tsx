@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { GraduationCap, Upload, Play, Loader2, CheckCircle, XCircle, Clock, FolderOpen, Sparkles } from "lucide-react";
 import { uploadTrainingData, startTraining, getTrainingJobs, getTrainedModels } from "@/lib/api";
 import clsx from "clsx";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Tab = "upload" | "jobs" | "models";
 
@@ -104,10 +105,11 @@ export default function TrainPage() {
                         <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Fine-tune models with LoRA</p>
                     </div>
                 </div>
+                <ThemeToggle />
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
-                <div className="mx-auto max-w-2xl space-y-5 animate-slide-up">
+            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12">
+                <div className="space-y-6 animate-slide-up">
                     <div className="tab-bar">
                         {tabs.map(({ key, label, icon: Icon }) => (
                             <button key={key} onClick={() => setTab(key)} className={clsx("tab-item", tab === key && "tab-active")}>
@@ -122,7 +124,7 @@ export default function TrainPage() {
 
                     {tab === "upload" && (
                         <div className="space-y-5">
-                            <div className="card space-y-4">
+                            <div className="card space-y-5">
                                 <h2 className="text-sm font-medium flex items-center gap-2" style={{ color: "var(--color-text)" }}>
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full gradient-accent text-[11px] font-bold text-white">1</span>
                                     Upload Training Data
@@ -134,7 +136,7 @@ export default function TrainPage() {
                                 </button>
                             </div>
 
-                            <div className={clsx("card space-y-4 transition-opacity", !datasetId && "opacity-40 pointer-events-none")}>
+                            <div className={clsx("card space-y-5 transition-opacity", !datasetId && "opacity-40 pointer-events-none")}>
                                 <h2 className="text-sm font-medium flex items-center gap-2" style={{ color: "var(--color-text)" }}>
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full gradient-accent text-[11px] font-bold text-white">2</span>
                                     Configure Training

@@ -55,16 +55,16 @@ export function Sidebar() {
     return (
         <>
             {/* Desktop sidebar */}
-            <aside className="hidden md:flex w-[72px] flex-col items-center border-r border-[var(--color-border)] bg-[var(--color-surface)] py-5 gap-1 transition-colors duration-300">
+            <aside className="hidden md:flex w-[76px] flex-col items-center border-r border-[var(--color-border)] bg-[var(--color-surface)] py-5 gap-1 transition-colors duration-300">
                 {/* Logo */}
-                <Link href="/" className="group relative mb-5">
+                <Link href="/" className="group relative mb-6">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl gradient-accent transition-transform group-hover:scale-105 glow-accent">
                         <Sparkles className="h-5 w-5 text-white" />
                     </div>
                 </Link>
 
                 {/* Nav items */}
-                <nav className="flex flex-1 flex-col items-center gap-0.5">
+                <nav className="flex flex-1 flex-col items-center gap-1">
                     {nav.map(({ href, icon: Icon, label }) => {
                         const active = pathname === href || (href !== "/" && pathname.startsWith(href));
                         return (

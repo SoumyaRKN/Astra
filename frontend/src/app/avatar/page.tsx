@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { User, Upload, Loader2, Camera, Play, Sparkles } from "lucide-react";
 import { uploadAvatar, getAvatarProfile, animateAvatar } from "@/lib/api";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function AvatarPage() {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -65,10 +66,11 @@ export default function AvatarPage() {
                         <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Customize your AI persona</p>
                     </div>
                 </div>
+                <ThemeToggle />
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
-                <div className="mx-auto max-w-lg space-y-6 animate-slide-up">
+            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12">
+                <div className="space-y-6 animate-slide-up">
                     <div className="flex flex-col items-center">
                         <div className="relative group">
                             <div className="h-32 w-32 rounded-full border-2 overflow-hidden flex items-center justify-center" style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}>

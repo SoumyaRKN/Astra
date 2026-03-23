@@ -5,6 +5,7 @@ import { Settings, Sun, Moon, Monitor, Trash2, Server, Cpu, HardDrive, RefreshCw
 import { useTheme, ThemeMode } from "@/store/theme";
 import { getHealth, getInfo, getSessions, clearHistory } from "@/lib/api";
 import clsx from "clsx";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface SystemInfo {
     status?: string;
@@ -82,10 +83,11 @@ export default function SettingsPage() {
                         <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Preferences &amp; system info</p>
                     </div>
                 </div>
+                <ThemeToggle />
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
-                <div className="mx-auto max-w-2xl space-y-6 animate-slide-up">
+            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12">
+                <div className="space-y-6 animate-slide-up">
                     {error && <div className="alert alert-error">{error}</div>}
                     {info && <div className="alert alert-success">{info}</div>}
 
@@ -96,13 +98,13 @@ export default function SettingsPage() {
                             <h2 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Appearance</h2>
                         </div>
                         <p className="text-xs" style={{ color: "var(--color-muted)" }}>Choose your preferred theme mode</p>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 gap-3">
                             {themes.map(({ key, label, icon: Icon }) => (
                                 <button
                                     key={key}
                                     onClick={() => setMode(key)}
                                     className={clsx(
-                                        "flex flex-col items-center gap-2 rounded-xl p-4 text-xs font-medium transition-all border",
+                                        "flex flex-col items-center gap-2.5 rounded-xl p-5 text-sm font-medium transition-all border",
                                         mode === key
                                             ? "border-transparent shadow-md"
                                             : "hover:scale-[1.02]"
@@ -113,7 +115,7 @@ export default function SettingsPage() {
                                         color: mode === key ? "var(--color-accent)" : "var(--color-muted)",
                                     }}
                                 >
-                                    <Icon className="h-5 w-5" />
+                                    <Icon className="h-6 w-6" />
                                     {label}
                                 </button>
                             ))}
@@ -131,7 +133,7 @@ export default function SettingsPage() {
                                 <Loader2 className="h-5 w-5 animate-spin" style={{ color: "var(--color-accent)" }} />
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                                 <div className="rounded-lg p-3" style={{ background: "var(--color-surface-2)" }}>
                                     <div className="flex items-center gap-2 mb-1">
                                         <div className={clsx("h-2 w-2 rounded-full", systemInfo.status === "ok" ? "bg-green-400" : "bg-red-400")} />

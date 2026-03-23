@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Music, Loader2, Download, Wand2, Upload, Headphones } from "lucide-react";
 import { enhanceAudio, generateMusic } from "@/lib/api";
 import clsx from "clsx";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Tab = "generate" | "enhance";
 
@@ -49,10 +50,11 @@ export default function AudioPage() {
                         <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Generate music &amp; enhance audio</p>
                     </div>
                 </div>
+                <ThemeToggle />
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
-                <div className="mx-auto max-w-2xl space-y-5 animate-slide-up">
+            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12">
+                <div className="space-y-6 animate-slide-up">
                     <div className="tab-bar">
                         <button onClick={() => setTab("generate")} className={clsx("tab-item", tab === "generate" && "tab-active")}>
                             <Wand2 className="h-4 w-4" />
@@ -90,7 +92,7 @@ export default function AudioPage() {
                         </div>
                     )}
 
-                    <button onClick={handleSubmit} disabled={loading} className="btn-primary w-full !py-3">
+                    <button onClick={handleSubmit} disabled={loading} className="btn-primary w-full !py-3.5">
                         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : tab === "generate" ? <Wand2 className="h-4 w-4" /> : <Headphones className="h-4 w-4" />}
                         {loading ? "Processing..." : tab === "generate" ? "Generate Music" : "Enhance Audio"}
                     </button>

@@ -1,0 +1,16 @@
+{
+    "name": "Astra",
+    "short_name": "Astra",
+    "description": "Your local AI assistant — 100% private, runs entirely on your machine",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#060609",
+    "theme_color": "#7c5cfc",
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        }
+    ]
+}

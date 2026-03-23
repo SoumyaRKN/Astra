@@ -7,6 +7,7 @@ import { Send, Loader2, Bot, User, Sparkles, Trash2, Zap, Code, Brain } from "lu
 import ReactMarkdown from "react-markdown";
 import TextareaAutosize from "react-textarea-autosize";
 import clsx from "clsx";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Health {
     status: string;
@@ -81,6 +82,7 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center gap-2.5">
+                    <ThemeToggle />
                     <div className={clsx("status-badge", isConnected ? "status-online" : "status-offline")}>
                         <span className={clsx("h-1.5 w-1.5 rounded-full", isConnected ? "bg-[var(--color-success)]" : "bg-[var(--color-error)]")} />
                         {isConnected ? health?.model : "Offline"}
@@ -114,12 +116,12 @@ export default function Home() {
                             </p>
                         </div>
 
-                        <div className="mt-2 grid w-full max-w-md gap-2.5 sm:grid-cols-3">
+                        <div className="mt-2 grid w-full max-w-lg gap-2.5 sm:grid-cols-3">
                             {suggestions.map(({ icon: Icon, text, color }, i) => (
                                 <button
                                     key={i}
                                     onClick={() => { setInput(text); inputRef.current?.focus(); }}
-                                    className="group glass glass-hover flex flex-col items-start gap-2.5 rounded-xl p-3.5 text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className="group glass glass-hover flex flex-col items-start gap-2.5 rounded-xl p-4 text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     <Icon className={clsx("h-4 w-4", color)} />
                                     <span className="text-xs leading-snug" style={{ color: "var(--color-muted)" }}>{text}</span>
@@ -128,7 +130,7 @@ export default function Home() {
                         </div>
                     </div>
                 ) : (
-                    <div className="mx-auto max-w-3xl space-y-1 px-4 py-6 md:px-6">
+                    <div className="space-y-5 px-4 py-6 md:px-8 lg:px-12">
                         {messages.map((msg) => (
                             <ChatBubble key={msg.id} message={msg} />
                         ))}
@@ -152,14 +154,14 @@ export default function Home() {
 
             {/* Error */}
             {error && (
-                <div className="mx-auto w-full max-w-3xl px-4">
+                <div className="px-4 md:px-8 lg:px-12">
                     <div className="alert alert-error">{error}</div>
                 </div>
             )}
 
             {/* Input area */}
-            <div className="border-t px-4 py-3 md:px-6" style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}>
-                <div className="mx-auto flex max-w-3xl items-end gap-2.5">
+            <div className="border-t px-4 py-3 md:px-8 lg:px-12" style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}>
+                <div className="flex items-end gap-3">
                     <div className="relative flex-1">
                         <TextareaAutosize
                             ref={inputRef}
@@ -187,7 +189,7 @@ export default function Home() {
                         {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-[18px] w-[18px]" />}
                     </button>
                 </div>
-                <p className="mx-auto mt-2 max-w-3xl text-center text-[11px]" style={{ color: "var(--color-muted)", opacity: 0.5 }}>
+                <p className="mt-2 text-center text-[11px]" style={{ color: "var(--color-muted)", opacity: 0.5 }}>
                     100% local and private — your data never leaves your machine
                 </p>
             </div>
@@ -199,7 +201,7 @@ function ChatBubble({ message }: { message: Message }) {
     const isUser = message.role === "user";
 
     return (
-        <div className={clsx("flex items-start gap-3 py-3 animate-in", isUser && "flex-row-reverse")}>
+        <div className={clsx("flex items-start gap-3 animate-in", isUser && "flex-row-reverse")}>
             <div
                 className={clsx(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
@@ -213,9 +215,9 @@ function ChatBubble({ message }: { message: Message }) {
                 }
             </div>
 
-            <div className={clsx("min-w-0 max-w-[85%]", isUser && "text-right")}>
+            <div className={clsx("min-w-0 max-w-[75%]", isUser && "text-right")}>
                 <div className={clsx(
-                    "inline-block rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                    "inline-block rounded-2xl px-4 py-3 text-sm leading-relaxed break-words",
                     isUser
                         ? "gradient-accent text-white rounded-tr-lg"
                         : "glass rounded-tl-lg"
@@ -225,7 +227,7 @@ function ChatBubble({ message }: { message: Message }) {
                     {isUser ? (
                         <p className="whitespace-pre-wrap">{message.content}</p>
                     ) : (
-                        <div className="prose prose-sm max-w-none [&_p]:my-1.5 [&_pre]:my-2 [&_pre]:rounded-lg [&_ul]:my-1 [&_ol]:my-1 [&_code]:text-[var(--color-accent)] [&_code]:bg-[var(--color-accent-subtle)] [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_a]:text-[var(--color-accent)] [&_a]:no-underline hover:[&_a]:underline [&_pre]:bg-[var(--color-bg)]" style={{ color: "var(--color-text)" }}>
+                        <div className="prose prose-sm max-w-none break-words overflow-hidden [&_p]:my-1.5 [&_pre]:my-2 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_ul]:my-1 [&_ol]:my-1 [&_code]:text-[var(--color-accent)] [&_code]:bg-[var(--color-accent-subtle)] [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:break-all [&_a]:text-[var(--color-accent)] [&_a]:no-underline hover:[&_a]:underline [&_pre]:bg-[var(--color-bg)]" style={{ color: "var(--color-text)" }}>
                             <ReactMarkdown>{message.content}</ReactMarkdown>
                         </div>
                     )}

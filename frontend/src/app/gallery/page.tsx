@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { LayoutGrid, Image as ImageIcon, Video, Music, Loader2, Download, Trash2 } from "lucide-react";
 import { getGalleryImages, getGalleryVideos, getGalleryAudio } from "@/lib/api";
 import clsx from "clsx";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Tab = "images" | "videos" | "audio";
 
@@ -59,10 +60,11 @@ export default function GalleryPage() {
                         <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Browse your generated media</p>
                     </div>
                 </div>
+                <ThemeToggle />
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
-                <div className="mx-auto max-w-5xl space-y-5 animate-slide-up">
+            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12">
+                <div className="space-y-6 animate-slide-up">
                     <div className="tab-bar">
                         {tabs.map(({ key, label, icon: Icon }) => (
                             <button key={key} onClick={() => setTab(key)} className={clsx("tab-item", tab === key && "tab-active")}>
@@ -89,7 +91,7 @@ export default function GalleryPage() {
                     )}
 
                     {!loading && items.length > 0 && tab === "images" && (
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                             {items.map((item) => (
                                 <div key={item.id} className="group card overflow-hidden !p-0 animate-in-scale">
                                     <div className="relative aspect-square">
@@ -107,7 +109,7 @@ export default function GalleryPage() {
                     )}
 
                     {!loading && items.length > 0 && tab === "videos" && (
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {items.map((item) => (
                                 <div key={item.id} className="card overflow-hidden !p-0 animate-in-scale">
                                     <video src={`${baseUrl}${item.url}`} controls className="w-full aspect-video" />

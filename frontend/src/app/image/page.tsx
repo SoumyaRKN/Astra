@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Image as ImageIcon, Loader2, Download, Wand2, Upload, Sparkles } from "lucide-react";
 import { generateImage, imageFromImage, imageFromTrained } from "@/lib/api";
 import clsx from "clsx";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Tab = "text" | "img2img" | "trained";
 
@@ -61,10 +62,11 @@ export default function ImagePage() {
                         <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Create images with AI</p>
                     </div>
                 </div>
+                <ThemeToggle />
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
-                <div className="mx-auto max-w-2xl space-y-5 animate-slide-up">
+            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12">
+                <div className="space-y-6 animate-slide-up">
                     <div className="tab-bar">
                         {tabs.map(({ key, label, icon: Icon }) => (
                             <button key={key} onClick={() => setTab(key)} className={clsx("tab-item", tab === key && "tab-active")}>
@@ -86,7 +88,7 @@ export default function ImagePage() {
                     </div>
 
                     {tab === "text" && (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="mb-1.5 block text-sm" style={{ color: "var(--color-muted)" }}>Model</label>
                                 <select value={model} onChange={(e) => setModel(e.target.value)} className="input-base">
@@ -129,7 +131,7 @@ export default function ImagePage() {
                         </div>
                     )}
 
-                    <button onClick={handleGenerate} disabled={loading} className="btn-primary w-full !py-3">
+                    <button onClick={handleGenerate} disabled={loading} className="btn-primary w-full !py-3.5">
                         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                         {loading ? "Generating..." : "Generate"}
                     </button>

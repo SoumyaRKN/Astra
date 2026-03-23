@@ -85,6 +85,19 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ===== Selection ===== */
+::selection {
+    background: rgba(124, 92, 252, 0.25);
+    color: var(--color-text);
+}
+
+/* ===== Focus ring ===== */
+:focus-visible {
+    outline: 2px solid rgba(124, 92, 252, 0.5);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
     width: 5px;
@@ -316,7 +329,7 @@ body {
     border: 1px solid var(--color-border);
     background: var(--color-input-bg);
     border-radius: var(--radius-md);
-    padding: 10px 14px;
+    padding: 12px 16px;
     font-size: 14px;
     color: var(--color-text);
     outline: none;
@@ -338,7 +351,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 500;
@@ -370,7 +383,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 8px 14px;
+    padding: 8px 16px;
     border-radius: var(--radius-md);
     font-size: 13px;
     color: var(--color-muted);
@@ -389,8 +402,8 @@ body {
 /* ===== Tab bar ===== */
 .tab-bar {
     display: flex;
-    gap: 2px;
-    padding: 3px;
+    gap: 4px;
+    padding: 4px;
     border-radius: var(--radius-lg);
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -402,8 +415,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 8px 12px;
+    gap: 8px;
+    padding: 10px 16px;
     border-radius: var(--radius-md);
     font-size: 13px;
     color: var(--color-muted);
@@ -451,11 +464,19 @@ body {
     top: 0;
     z-index: 10;
     transition: background-color 0.3s, border-color 0.3s;
+    min-height: 64px;
+}
+
+@media (min-width: 1024px) {
+    .page-header {
+        padding: 16px 32px;
+    }
 }
 
 @media (max-width: 768px) {
     .page-header {
         padding: 12px 16px;
+        min-height: 56px;
     }
 
     .card {
@@ -626,7 +647,7 @@ select {
 /* ===== Alert messages ===== */
 .alert {
     border-radius: var(--radius-lg);
-    padding: 10px 16px;
+    padding: 12px 18px;
     font-size: 14px;
     border: 1px solid;
 }

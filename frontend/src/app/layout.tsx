@@ -6,7 +6,12 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
     title: "Astra",
-    description: "Your local AI assistant",
+    description: "Your local AI assistant — 100% private, runs entirely on your machine",
+    icons: {
+        icon: "/favicon.svg",
+        apple: "/apple-touch-icon.svg",
+    },
+    manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
