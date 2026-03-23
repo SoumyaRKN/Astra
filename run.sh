@@ -55,7 +55,7 @@ echo ""
 # Start backend
 echo -e "${YELLOW}Starting backend...${NC}"
 cd "$ROOT/backend"
-source venv/bin/activate
+source .venv/bin/activate
 python main.py &
 BACKEND_PID=$!
 cd "$ROOT"
