@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Video, Loader2, Download, Wand2, Upload } from "lucide-react";
-import { generateVideo, videoFromImage, storageUrl } from "@/lib/api";
+import { generateVideo, videoFromImage } from "@/lib/api";
 import clsx from "clsx";
 
 type Tab = "text" | "img2vid";
@@ -10,28 +10,27 @@ type Tab = "text" | "img2vid";
 export default function VideoPage() {
     const [tab, setTab] = useState<Tab>("text");
     const [prompt, setPrompt] = useState("");
-    const [steps, setSteps] = useState(40);
-    const [frames, setFrames] = useState(24);
+    const [model, setModel] = useState("zeroscope");
+    const [numFrames, setNumFrames] = useState(24);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [sourceFile, setSourceFile] = useState<File | null>(null);
 
     const handleGenerate = async () => {
-        if (!prompt.trim() && tab === "text") return;
         setLoading(true);
         setError(null);
         setResult(null);
-
         try {
             let res;
             if (tab === "text") {
-                res = await generateVideo(prompt, steps, frames);
+                if (!prompt.trim()) throw new Error("Enter a prompt");
+                res = await generateVideo(prompt, model, numFrames);
             } else {
                 if (!sourceFile) throw new Error("Select a source image");
-                res = await videoFromImage(sourceFile, prompt, steps, frames);
+                res = await videoFromImage(sourceFile, prompt, numFrames);
             }
-            setResult(storageUrl(res.url));
+            setResult(`http://127.0.0.1:8000${res.url}`);
         } catch (e) {
             setError(e instanceof Error ? e.message : "Generation failed");
         } finally {
@@ -41,35 +40,29 @@ export default function VideoPage() {
 
     return (
         <div className="flex h-full flex-col">
-            <header className="flex items-center gap-3 border-b border-border px-6 py-3">
-                <Video className="h-5 w-5 text-accent" />
-                <div>
-                    <h1 className="text-lg font-semibold">Video Generation</h1>
-                    <p className="text-xs text-muted">Create videos with AI</p>
+            <header className="page-header">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-subtle">
+                        <Video className="h-4 w-4 text-accent" />
+                    </div>
+                    <div>
+                        <h1 className="text-[15px] font-semibold">Video Generation</h1>
+                        <p className="text-[11px] text-muted">Create videos with AI</p>
+                    </div>
                 </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-6 py-6">
-                <div className="mx-auto max-w-2xl space-y-6">
+            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
+                <div className="mx-auto max-w-2xl space-y-5 animate-slide-up">
                     {/* Tabs */}
-                    <div className="flex gap-1 rounded-xl bg-surface p-1">
-                        <button
-                            onClick={() => setTab("text")}
-                            className={clsx(
-                                "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
-                                tab === "text" ? "bg-accent/15 text-accent" : "text-muted hover:text-text"
-                            )}
-                        >
-                            <Wand2 className="h-4 w-4" /> Text to Video
+                    <div className="tab-bar">
+                        <button onClick={() => setTab("text")} className={clsx("tab-item", tab === "text" && "tab-active")}>
+                            <Wand2 className="h-4 w-4" />
+                            <span>Text to Video</span>
                         </button>
-                        <button
-                            onClick={() => setTab("img2vid")}
-                            className={clsx(
-                                "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
-                                tab === "img2vid" ? "bg-accent/15 text-accent" : "text-muted hover:text-text"
-                            )}
-                        >
-                            <Upload className="h-4 w-4" /> Image to Video
+                        <button onClick={() => setTab("img2vid")} className={clsx("tab-item", tab === "img2vid" && "tab-active")}>
+                            <Upload className="h-4 w-4" />
+                            <span>Image to Video</span>
                         </button>
                     </div>
 
@@ -79,67 +72,55 @@ export default function VideoPage() {
                         <textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="Describe the video you want to generate..."
+                            placeholder="Describe the video you want..."
                             rows={3}
-                            className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder-muted outline-none focus:border-accent/50"
+                            className="input-base !rounded-xl resize-none"
                         />
                     </div>
 
-                    {tab === "img2vid" && (
-                        <div>
-                            <label className="mb-1.5 block text-sm text-muted">Source Image</label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => setSourceFile(e.target.files?.[0] || null)}
-                                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text file:mr-3 file:rounded file:border-0 file:bg-accent/10 file:px-3 file:py-1 file:text-accent file:text-sm"
-                            />
+                    {tab === "text" && (
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="mb-1.5 block text-sm text-muted">Model</label>
+                                <select value={model} onChange={(e) => setModel(e.target.value)} className="input-base">
+                                    <option value="zeroscope">Zeroscope</option>
+                                    <option value="modelscope">ModelScope</option>
+                                    <option value="svd">Stable Video Diffusion</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="mb-1.5 block text-sm text-muted">Frames: {numFrames}</label>
+                                <input type="range" min={8} max={64} step={4} value={numFrames} onChange={(e) => setNumFrames(Number(e.target.value))} className="w-full mt-2" />
+                            </div>
                         </div>
                     )}
 
-                    {/* Controls */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="mb-1.5 block text-sm text-muted">Steps: {steps}</label>
-                            <input
-                                type="range"
-                                min={10}
-                                max={100}
-                                value={steps}
-                                onChange={(e) => setSteps(Number(e.target.value))}
-                                className="w-full accent-accent"
-                            />
+                    {tab === "img2vid" && (
+                        <div className="space-y-4">
+                            <div>
+                                <label className="mb-1.5 block text-sm text-muted">Source Image</label>
+                                <input type="file" accept="image/*" onChange={(e) => setSourceFile(e.target.files?.[0] || null)} className="file-input" />
+                            </div>
+                            <div>
+                                <label className="mb-1.5 block text-sm text-muted">Frames: {numFrames}</label>
+                                <input type="range" min={8} max={64} step={4} value={numFrames} onChange={(e) => setNumFrames(Number(e.target.value))} className="w-full mt-1" />
+                            </div>
                         </div>
-                        <div>
-                            <label className="mb-1.5 block text-sm text-muted">Frames: {frames}</label>
-                            <input
-                                type="range"
-                                min={8}
-                                max={48}
-                                value={frames}
-                                onChange={(e) => setFrames(Number(e.target.value))}
-                                className="w-full accent-accent"
-                            />
-                        </div>
-                    </div>
+                    )}
 
-                    <button
-                        onClick={handleGenerate}
-                        disabled={loading}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
-                    >
+                    <button onClick={handleGenerate} disabled={loading} className="btn-primary w-full !py-3">
                         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-                        {loading ? "Generating..." : "Generate Video"}
+                        {loading ? "Generating..." : "Generate"}
                     </button>
 
-                    {error && <p className="text-sm text-error">{error}</p>}
+                    {error && <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-2.5 text-sm text-error">{error}</div>}
 
                     {result && (
-                        <div className="overflow-hidden rounded-xl border border-border">
+                        <div className="overflow-hidden rounded-xl border border-border animate-in-scale">
                             <video src={result} controls className="w-full" />
-                            <div className="flex items-center justify-between bg-surface px-4 py-2">
-                                <p className="text-xs text-muted truncate">{prompt}</p>
-                                <a href={result} download className="flex items-center gap-1 text-xs text-accent hover:underline">
+                            <div className="flex items-center justify-between bg-surface px-4 py-3">
+                                <p className="text-xs text-muted truncate flex-1 mr-4">{prompt}</p>
+                                <a href={result} download className="btn-ghost !px-3 !py-1.5 !text-xs">
                                     <Download className="h-3.5 w-3.5" /> Download
                                 </a>
                             </div>

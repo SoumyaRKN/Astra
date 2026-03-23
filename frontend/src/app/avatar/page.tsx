@@ -1,149 +1,126 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { User, Upload, Loader2, Play, Camera } from "lucide-react";
-import { uploadAvatar, getAvatarProfile, animateAvatar, storageUrl } from "@/lib/api";
+import { useState, useRef } from "react";
+import { User, Upload, Loader2, Camera, Play, Sparkles } from "lucide-react";
+import { uploadAvatar, getAvatarProfile, animateAvatar } from "@/lib/api";
 
 export default function AvatarPage() {
-    const [profile, setProfile] = useState<{ path: string; face_detected: boolean } | null>(null);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [animating, setAnimating] = useState(false);
-    const [animText, setAnimText] = useState("");
-    const [animDuration, setAnimDuration] = useState(5);
-    const [animResult, setAnimResult] = useState<string | null>(null);
+    const [animatedUrl, setAnimatedUrl] = useState<string | null>(null);
+    const [animationText, setAnimationText] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [info, setInfo] = useState<string | null>(null);
+    const fileRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        getAvatarProfile()
-            .then(setProfile)
-            .catch(() => { });
-    }, []);
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
+    const handleUpload = async (file: File) => {
         setLoading(true);
         setError(null);
+        setInfo(null);
         try {
-            const result = await uploadAvatar(file);
-            setProfile(result);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Upload failed");
+            const res = await uploadAvatar(file);
+            setAvatarUrl(`http://127.0.0.1:8000${res.url}`);
+            setInfo("Avatar uploaded successfully");
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Upload failed");
         } finally {
             setLoading(false);
         }
     };
 
     const handleAnimate = async () => {
+        if (!animationText.trim()) return;
         setAnimating(true);
         setError(null);
-        setAnimResult(null);
         try {
-            const result = await animateAvatar(animText, animDuration);
-            setAnimResult(storageUrl(result.url));
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Animation failed");
+            const res = await animateAvatar(animationText);
+            setAnimatedUrl(`http://127.0.0.1:8000${res.url}`);
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Animation failed");
         } finally {
             setAnimating(false);
         }
     };
 
+    const loadProfile = async () => {
+        try {
+            const profile = await getAvatarProfile();
+            if (profile.avatar_url) setAvatarUrl(`http://127.0.0.1:8000${profile.avatar_url}`);
+        } catch { }
+    };
+
+    useState(() => { loadProfile(); });
+
     return (
         <div className="flex h-full flex-col">
-            <header className="flex items-center gap-3 border-b border-border px-6 py-3">
-                <User className="h-5 w-5 text-accent" />
-                <div>
-                    <h1 className="text-lg font-semibold">Avatar</h1>
-                    <p className="text-xs text-muted">Create and animate your AI avatar</p>
+            <header className="page-header">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-subtle">
+                        <User className="h-4 w-4 text-accent" />
+                    </div>
+                    <div>
+                        <h1 className="text-[15px] font-semibold">Avatar</h1>
+                        <p className="text-[11px] text-muted">Customize your AI persona</p>
+                    </div>
                 </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-6 py-6">
-                <div className="mx-auto max-w-2xl space-y-6">
-                    {/* Upload Section */}
-                    <div className="rounded-xl border border-border bg-surface p-6">
-                        <h2 className="mb-4 text-sm font-medium">Avatar Photo</h2>
-
-                        {profile ? (
-                            <div className="flex items-center gap-6">
-                                <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-accent/30">
-                                    <img
-                                        src={storageUrl(`/storage/avatars/profile.png`)}
-                                        alt="Avatar"
-                                        className="h-full w-full object-cover"
-                                    />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-text">
-                                        Face detected:{" "}
-                                        <span className={profile.face_detected ? "text-success" : "text-warning"}>
-                                            {profile.face_detected ? "Yes" : "No"}
-                                        </span>
-                                    </p>
-                                    <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-text">
-                                        <Camera className="h-3.5 w-3.5" />
-                                        Change Photo
-                                        <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
-                                    </label>
-                                </div>
-                            </div>
-                        ) : (
-                            <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border py-12 transition-colors hover:border-accent/50">
-                                {loading ? (
-                                    <Loader2 className="h-8 w-8 animate-spin text-muted" />
+            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
+                <div className="mx-auto max-w-lg space-y-6 animate-slide-up">
+                    {/* Avatar display */}
+                    <div className="flex flex-col items-center">
+                        <div className="relative group">
+                            <div className="h-32 w-32 rounded-full border-2 border-border overflow-hidden bg-surface flex items-center justify-center">
+                                {avatarUrl ? (
+                                    <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
                                 ) : (
-                                    <Upload className="h-8 w-8 text-muted" />
+                                    <User className="h-12 w-12 text-muted opacity-30" />
                                 )}
-                                <p className="text-sm text-muted">
-                                    {loading ? "Processing..." : "Upload a photo to create your avatar"}
-                                </p>
-                                <input type="file" accept="image/*" onChange={handleUpload} className="hidden" disabled={loading} />
-                            </label>
-                        )}
-                    </div>
-
-                    {/* Animate Section */}
-                    {profile && (
-                        <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
-                            <h2 className="text-sm font-medium">Animate Avatar</h2>
-                            <div>
-                                <label className="mb-1.5 block text-sm text-muted">Text (for lip-sync)</label>
-                                <input
-                                    type="text"
-                                    value={animText}
-                                    onChange={(e) => setAnimText(e.target.value)}
-                                    placeholder="Hello, I am your AI assistant!"
-                                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder-muted outline-none focus:border-accent/50"
-                                />
-                            </div>
-                            <div>
-                                <label className="mb-1.5 block text-sm text-muted">Duration: {animDuration}s</label>
-                                <input
-                                    type="range"
-                                    min={2}
-                                    max={15}
-                                    value={animDuration}
-                                    onChange={(e) => setAnimDuration(Number(e.target.value))}
-                                    className="w-full accent-accent"
-                                />
                             </div>
                             <button
-                                onClick={handleAnimate}
-                                disabled={animating}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+                                onClick={() => fileRef.current?.click()}
+                                className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full gradient-accent text-white shadow-lg hover:scale-105 transition-transform"
                             >
-                                {animating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                                {animating ? "Animating..." : "Animate"}
+                                <Camera className="h-4 w-4" />
                             </button>
+                            <input
+                                ref={fileRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
+                            />
                         </div>
-                    )}
+                        {loading && <div className="flex items-center gap-2 mt-3 text-sm text-muted"><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</div>}
+                    </div>
 
-                    {error && <p className="text-sm text-error">{error}</p>}
+                    {info && <div className="rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-2.5 text-sm text-green-400">{info}</div>}
+                    {error && <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-2.5 text-sm text-error">{error}</div>}
 
-                    {animResult && (
-                        <div className="overflow-hidden rounded-xl border border-border">
-                            <video src={animResult} controls autoPlay className="w-full" />
+                    {/* Animate section */}
+                    <div className="card space-y-4">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-accent" />
+                            <h2 className="text-sm font-medium">Animate Avatar</h2>
+                        </div>
+                        <p className="text-xs text-muted">Make your avatar speak with lip-sync animation</p>
+                        <textarea
+                            value={animationText}
+                            onChange={(e) => setAnimationText(e.target.value)}
+                            placeholder="Enter text for lip-sync animation..."
+                            rows={3}
+                            className="input-base !rounded-xl resize-none"
+                        />
+                        <button onClick={handleAnimate} disabled={animating || !animationText.trim()} className="btn-primary w-full">
+                            {animating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                            {animating ? "Animating..." : "Animate"}
+                        </button>
+                    </div>
+
+                    {animatedUrl && (
+                        <div className="card overflow-hidden !p-0 animate-in-scale">
+                            <video src={animatedUrl} controls className="w-full" />
                         </div>
                     )}
                 </div>

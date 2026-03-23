@@ -1,61 +1,61 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { GraduationCap, Upload, Loader2, Play, CheckCircle, XCircle, Clock, FolderOpen } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { GraduationCap, Upload, Play, Loader2, CheckCircle, XCircle, Clock, FolderOpen, Sparkles } from "lucide-react";
 import { uploadTrainingData, startTraining, getTrainingJobs, getTrainedModels } from "@/lib/api";
+import clsx from "clsx";
+
+type Tab = "upload" | "jobs" | "models";
 
 interface Job {
     id: string;
-    name: string;
     status: string;
-    progress: number;
-    steps: number;
-    image_count: number;
-    error?: string;
+    progress?: number;
+    model_name?: string;
+    created_at?: string;
 }
 
 interface Model {
     name: string;
-    trigger_word?: string;
-    steps?: number;
     path: string;
+    created_at?: string;
 }
 
 export default function TrainPage() {
-    const [files, setFiles] = useState<File[]>([]);
-    const [dataset, setDataset] = useState("default");
-    const [name, setName] = useState("my_lora");
-    const [triggerWord, setTriggerWord] = useState("astra_subject");
+    const [tab, setTab] = useState<Tab>("upload");
+    const [files, setFiles] = useState<FileList | null>(null);
+    const [modelName, setModelName] = useState("");
     const [steps, setSteps] = useState(500);
     const [uploading, setUploading] = useState(false);
     const [training, setTraining] = useState(false);
-    const [uploadResult, setUploadResult] = useState<{ count: number } | null>(null);
+    const [datasetId, setDatasetId] = useState<string | null>(null);
     const [jobs, setJobs] = useState<Job[]>([]);
     const [models, setModels] = useState<Model[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [info, setInfo] = useState<string | null>(null);
 
-    const refresh = async () => {
-        try {
-            const [j, m] = await Promise.all([getTrainingJobs(), getTrainedModels()]);
-            setJobs(j.jobs || []);
-            setModels(m.models || []);
-        } catch { /* ignore */ }
-    };
-
-    useEffect(() => {
-        refresh();
-        const interval = setInterval(refresh, 5000);
-        return () => clearInterval(interval);
+    const loadJobs = useCallback(async () => {
+        try { const d = await getTrainingJobs(); setJobs(Array.isArray(d) ? d : d.jobs ?? []); } catch { }
     }, []);
 
+    const loadModels = useCallback(async () => {
+        try { const d = await getTrainedModels(); setModels(Array.isArray(d) ? d : d.models ?? []); } catch { }
+    }, []);
+
+    useEffect(() => {
+        if (tab === "jobs") loadJobs();
+        if (tab === "models") loadModels();
+    }, [tab, loadJobs, loadModels]);
+
     const handleUpload = async () => {
-        if (files.length === 0) return;
+        if (!files || files.length === 0) return;
         setUploading(true);
         setError(null);
+        setInfo(null);
         try {
-            const result = await uploadTrainingData(files, dataset);
-            setUploadResult(result);
-            setFiles([]);
+            const res = await uploadTrainingData(files);
+            setDatasetId(res.dataset_id);
+            setInfo(`Uploaded ${files.length} file(s) — Dataset: ${res.dataset_id}`);
         } catch (e) {
             setError(e instanceof Error ? e.message : "Upload failed");
         } finally {
@@ -63,140 +63,120 @@ export default function TrainPage() {
         }
     };
 
-    const handleTrain = async () => {
+    const handleStartTraining = async () => {
+        if (!datasetId || !modelName.trim()) return;
         setTraining(true);
         setError(null);
         try {
-            await startTraining({ dataset, name, trigger_word: triggerWord, steps });
-            await refresh();
+            await startTraining(datasetId, modelName, steps);
+            setInfo("Training job started! Check the Jobs tab for progress.");
+            setTab("jobs");
+            loadJobs();
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Training failed to start");
+            setError(e instanceof Error ? e.message : "Failed to start training");
         } finally {
             setTraining(false);
         }
     };
 
-    const statusIcon = (status: string) => {
-        switch (status) {
-            case "completed": return <CheckCircle className="h-4 w-4 text-success" />;
-            case "failed": return <XCircle className="h-4 w-4 text-error" />;
-            default: return <Loader2 className="h-4 w-4 animate-spin text-accent" />;
-        }
+    const statusIcon = (s: string) => {
+        if (s === "completed") return <CheckCircle className="h-4 w-4 text-green-400" />;
+        if (s === "failed") return <XCircle className="h-4 w-4 text-error" />;
+        if (s === "running") return <Loader2 className="h-4 w-4 animate-spin text-accent" />;
+        return <Clock className="h-4 w-4 text-muted" />;
     };
+
+    const tabs: { key: Tab; label: string; icon: typeof Upload }[] = [
+        { key: "upload", label: "Upload & Train", icon: Upload },
+        { key: "jobs", label: "Jobs", icon: Clock },
+        { key: "models", label: "Models", icon: Sparkles },
+    ];
 
     return (
         <div className="flex h-full flex-col">
-            <header className="flex items-center gap-3 border-b border-border px-6 py-3">
-                <GraduationCap className="h-5 w-5 text-accent" />
-                <div>
-                    <h1 className="text-lg font-semibold">Training</h1>
-                    <p className="text-xs text-muted">Train AI on your images for personalized generation</p>
+            <header className="page-header">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-subtle">
+                        <GraduationCap className="h-4 w-4 text-accent" />
+                    </div>
+                    <div>
+                        <h1 className="text-[15px] font-semibold">Training</h1>
+                        <p className="text-[11px] text-muted">Fine-tune models with LoRA</p>
+                    </div>
                 </div>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-6 py-6">
-                <div className="mx-auto max-w-2xl space-y-6">
-                    {/* Upload Data */}
-                    <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
-                        <h2 className="text-sm font-medium">1. Upload Training Data</h2>
-                        <div>
-                            <input
-                                type="file"
-                                multiple
-                                accept="image/*,video/*"
-                                onChange={(e) => setFiles(Array.from(e.target.files || []))}
-                                className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text file:mr-3 file:rounded file:border-0 file:bg-accent/10 file:px-3 file:py-1 file:text-accent file:text-sm"
-                            />
-                            <p className="mt-1 text-xs text-muted">Upload at least 3 images (PNG, JPG). More images = better results.</p>
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-sm text-muted">Dataset Name</label>
-                            <input
-                                type="text"
-                                value={dataset}
-                                onChange={(e) => setDataset(e.target.value)}
-                                className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text outline-none focus:border-accent/50"
-                            />
-                        </div>
-                        <button
-                            onClick={handleUpload}
-                            disabled={uploading || files.length === 0}
-                            className="flex items-center gap-2 rounded-lg bg-accent/15 px-4 py-2 text-sm text-accent transition-colors hover:bg-accent/25 disabled:opacity-50"
-                        >
-                            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                            {uploading ? "Uploading..." : `Upload ${files.length} file(s)`}
-                        </button>
-                        {uploadResult && (
-                            <p className="text-sm text-success">Uploaded {uploadResult.count} files to dataset &quot;{dataset}&quot;</p>
-                        )}
+            <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6">
+                <div className="mx-auto max-w-2xl space-y-5 animate-slide-up">
+                    <div className="tab-bar">
+                        {tabs.map(({ key, label, icon: Icon }) => (
+                            <button key={key} onClick={() => setTab(key)} className={clsx("tab-item", tab === key && "tab-active")}>
+                                <Icon className="h-4 w-4" />
+                                <span>{label}</span>
+                            </button>
+                        ))}
                     </div>
 
-                    {/* Training Config */}
-                    <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
-                        <h2 className="text-sm font-medium">2. Start Training</h2>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="mb-1 block text-sm text-muted">Model Name</label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text outline-none focus:border-accent/50"
-                                />
+                    {error && <div className="rounded-xl border border-error/20 bg-error/5 px-4 py-2.5 text-sm text-error">{error}</div>}
+                    {info && <div className="rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-2.5 text-sm text-green-400">{info}</div>}
+
+                    {tab === "upload" && (
+                        <div className="space-y-5">
+                            {/* Step 1: Upload */}
+                            <div className="card space-y-4">
+                                <h2 className="text-sm font-medium flex items-center gap-2">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full gradient-accent text-[11px] font-bold text-white">1</span>
+                                    Upload Training Data
+                                </h2>
+                                <input type="file" accept="image/*,video/*" multiple onChange={(e) => setFiles(e.target.files)} className="file-input" />
+                                <button onClick={handleUpload} disabled={uploading || !files?.length} className="btn-primary w-full">
+                                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                                    {uploading ? "Uploading..." : "Upload Data"}
+                                </button>
                             </div>
-                            <div>
-                                <label className="mb-1 block text-sm text-muted">Trigger Word</label>
-                                <input
-                                    type="text"
-                                    value={triggerWord}
-                                    onChange={(e) => setTriggerWord(e.target.value)}
-                                    className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text outline-none focus:border-accent/50"
-                                />
+
+                            {/* Step 2: Configure & Start */}
+                            <div className={clsx("card space-y-4 transition-opacity", !datasetId && "opacity-40 pointer-events-none")}>
+                                <h2 className="text-sm font-medium flex items-center gap-2">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full gradient-accent text-[11px] font-bold text-white">2</span>
+                                    Configure Training
+                                </h2>
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <label className="mb-1.5 block text-sm text-muted">Model Name</label>
+                                        <input type="text" value={modelName} onChange={(e) => setModelName(e.target.value)} placeholder="my_custom_model" className="input-base" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1.5 block text-sm text-muted">Steps: {steps}</label>
+                                        <input type="range" min={100} max={2000} step={100} value={steps} onChange={(e) => setSteps(Number(e.target.value))} className="w-full mt-2" />
+                                    </div>
+                                </div>
+                                <button onClick={handleStartTraining} disabled={training || !modelName.trim()} className="btn-primary w-full">
+                                    {training ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                                    {training ? "Starting..." : "Start Training"}
+                                </button>
                             </div>
                         </div>
-                        <div>
-                            <label className="mb-1 block text-sm text-muted">Training Steps: {steps}</label>
-                            <input
-                                type="range"
-                                min={100}
-                                max={2000}
-                                step={100}
-                                value={steps}
-                                onChange={(e) => setSteps(Number(e.target.value))}
-                                className="w-full accent-accent"
-                            />
-                        </div>
-                        <button
-                            onClick={handleTrain}
-                            disabled={training}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
-                        >
-                            {training ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                            {training ? "Starting..." : "Start Training"}
-                        </button>
-                    </div>
+                    )}
 
-                    {error && <p className="text-sm text-error">{error}</p>}
-
-                    {/* Active Jobs */}
-                    {jobs.length > 0 && (
-                        <div className="rounded-xl border border-border bg-surface p-6 space-y-3">
-                            <h2 className="text-sm font-medium">Training Jobs</h2>
+                    {tab === "jobs" && (
+                        <div className="space-y-3">
+                            {jobs.length === 0 && (
+                                <div className="flex flex-col items-center py-16 text-muted">
+                                    <Clock className="h-10 w-10 mb-3 opacity-30" />
+                                    <p className="text-sm">No training jobs yet</p>
+                                </div>
+                            )}
                             {jobs.map((job) => (
-                                <div key={job.id} className="flex items-center gap-3 rounded-lg bg-bg px-4 py-3">
+                                <div key={job.id} className="card flex items-center gap-4">
                                     {statusIcon(job.status)}
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{job.name}</p>
-                                        <p className="text-xs text-muted">
-                                            {job.status} • {job.image_count} images • {job.progress}%
-                                        </p>
+                                        <p className="text-sm font-medium truncate">{job.model_name || job.id}</p>
+                                        <p className="text-xs text-muted capitalize">{job.status}{job.progress != null ? ` — ${job.progress}%` : ""}</p>
                                     </div>
-                                    {job.status === "training" && (
-                                        <div className="w-24 h-1.5 rounded-full bg-surface-2 overflow-hidden">
-                                            <div
-                                                className="h-full rounded-full bg-accent transition-all"
-                                                style={{ width: `${job.progress}%` }}
-                                            />
+                                    {job.status === "running" && job.progress != null && (
+                                        <div className="w-20 h-1.5 rounded-full bg-surface overflow-hidden">
+                                            <div className="h-full gradient-accent rounded-full transition-all" style={{ width: `${job.progress}%` }} />
                                         </div>
                                     )}
                                 </div>
@@ -204,21 +184,24 @@ export default function TrainPage() {
                         </div>
                     )}
 
-                    {/* Trained Models */}
-                    {models.length > 0 && (
-                        <div className="rounded-xl border border-border bg-surface p-6 space-y-3">
-                            <h2 className="text-sm font-medium">Trained Models</h2>
-                            {models.map((m, i) => (
-                                <div key={i} className="flex items-center gap-3 rounded-lg bg-bg px-4 py-3">
-                                    <FolderOpen className="h-4 w-4 text-accent" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium">{m.name}</p>
-                                        <p className="text-xs text-muted">
-                                            {m.trigger_word && `Trigger: ${m.trigger_word}`}
-                                            {m.steps && ` • ${m.steps} steps`}
-                                        </p>
-                                        <p className="text-xs text-muted/60 truncate">{m.path}</p>
+                    {tab === "models" && (
+                        <div className="space-y-3">
+                            {models.length === 0 && (
+                                <div className="flex flex-col items-center py-16 text-muted">
+                                    <Sparkles className="h-10 w-10 mb-3 opacity-30" />
+                                    <p className="text-sm">No trained models yet</p>
+                                </div>
+                            )}
+                            {models.map((m) => (
+                                <div key={m.path} className="card flex items-center gap-4">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-subtle">
+                                        <Sparkles className="h-4 w-4 text-accent" />
                                     </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{m.name}</p>
+                                        <p className="text-[11px] text-muted truncate">{m.path}</p>
+                                    </div>
+                                    <FolderOpen className="h-4 w-4 text-muted" />
                                 </div>
                             ))}
                         </div>
