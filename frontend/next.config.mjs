@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: "standalone",
-    outputFileTracingRoot: "/home/nsoumyaprakash/Desktop/Personal/Projects/Astra",
     async rewrites() {
         return [
             {
