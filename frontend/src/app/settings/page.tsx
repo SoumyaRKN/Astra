@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Sun, Moon, Monitor, Trash2, Server, Cpu, HardDrive, RefreshCw, Loader2 } from "lucide-react";
+import { Settings, Sun, Moon, Monitor, Trash2, Server, Cpu, HardDrive, RefreshCw, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useTheme, ThemeMode } from "@/store/theme";
 import { getHealth, getInfo, getSessions, clearHistory } from "@/lib/api";
 import clsx from "clsx";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface SystemInfo {
     status?: string;
@@ -54,140 +53,166 @@ export default function SettingsPage() {
     const handleClearSession = async (session: string) => {
         setClearing(session);
         setError(null);
+        setInfo(null);
         try {
             await clearHistory(session);
             setSessions((prev) => prev.filter((s) => s !== session));
-            setInfo(`Cleared session: ${session}`);
+            setInfo(`Session "${session}" cleared successfully.`);
         } catch {
-            setError("Failed to clear session");
+            setError("Failed to clear session. Please try again.");
         } finally {
             setClearing(null);
         }
     };
 
-    const themes: { key: ThemeMode; label: string; icon: typeof Sun }[] = [
-        { key: "light", label: "Light", icon: Sun },
-        { key: "dark", label: "Dark", icon: Moon },
-        { key: "system", label: "System", icon: Monitor },
+    const themes: { key: ThemeMode; label: string; icon: typeof Sun; desc: string }[] = [
+        { key: "light", label: "Light", icon: Sun, desc: "Always light" },
+        { key: "dark", label: "Dark", icon: Moon, desc: "Always dark" },
+        { key: "system", label: "System", icon: Monitor, desc: "Follows OS" },
     ];
 
+    const isOnline = systemInfo.status === "ok";
+
     return (
-        <div className="flex h-full flex-col">
-            <header className="page-header">
+        <div className="flex h-full flex-col bg-[var(--color-bg)] transition-colors duration-500">
+            {/* Header */}
+            <header className="page-header border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-xl z-30">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "var(--color-accent-subtle)" }}>
-                        <Settings className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-[var(--color-surface-2)] border border-[var(--color-border)]">
+                        <Settings className="h-4 w-4 text-[var(--color-text)]" />
                     </div>
                     <div>
-                        <h1 className="text-[15px] font-semibold" style={{ color: "var(--color-text)" }}>Settings</h1>
-                        <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>Preferences &amp; system info</p>
+                        <h1 className="text-[14px] font-semibold tracking-tight text-[var(--color-text)]">Settings</h1>
+                        <p className="text-[11px] font-medium text-[var(--color-muted)]">Preferences &amp; system info</p>
                     </div>
                 </div>
-                <ThemeToggle />
             </header>
 
             <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8 lg:px-12">
-                <div className="space-y-6 animate-slide-up">
-                    {error && <div className="alert alert-error">{error}</div>}
-                    {info && <div className="alert alert-success">{info}</div>}
+                <div className="mx-auto max-w-3xl space-y-6 animate-slide-up">
 
-                    {/* Theme */}
-                    <div className="card space-y-4">
-                        <div className="flex items-center gap-2">
-                            <Sun className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
-                            <h2 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Appearance</h2>
+                    {/* Status alerts */}
+                    {error && (
+                        <div className="flex items-center gap-2.5 rounded-[12px] border border-[var(--color-error)]/20 bg-[var(--color-error)]/05 px-4 py-3 text-[14px] text-[var(--color-error)]">
+                            <AlertCircle className="h-4 w-4 shrink-0" />
+                            {error}
                         </div>
-                        <p className="text-xs" style={{ color: "var(--color-muted)" }}>Choose your preferred theme mode</p>
+                    )}
+                    {info && (
+                        <div className="flex items-center gap-2.5 rounded-[12px] border border-[var(--color-success)]/20 bg-[var(--color-success)]/05 px-4 py-3 text-[14px] text-[var(--color-success)]">
+                            <CheckCircle2 className="h-4 w-4 shrink-0" />
+                            {info}
+                        </div>
+                    )}
+
+                    {/* Appearance */}
+                    <div className="card space-y-5">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Sun className="h-4 w-4 text-[var(--color-text)]" />
+                                <h2 className="text-[14px] font-semibold text-[var(--color-text)]">Appearance</h2>
+                            </div>
+                            <p className="text-[13px] text-[var(--color-muted)]">Choose your preferred interface theme</p>
+                        </div>
                         <div className="grid grid-cols-3 gap-3">
-                            {themes.map(({ key, label, icon: Icon }) => (
+                            {themes.map(({ key, label, icon: Icon, desc }) => (
                                 <button
                                     key={key}
                                     onClick={() => setMode(key)}
                                     className={clsx(
-                                        "flex flex-col items-center gap-2.5 rounded-xl p-5 text-sm font-medium transition-all border",
+                                        "flex flex-col items-center gap-2.5 rounded-[16px] p-5 text-sm font-medium transition-all duration-300 border",
                                         mode === key
-                                            ? "border-transparent shadow-md"
-                                            : "hover:scale-[1.02]"
+                                            ? "border-[var(--color-border-hover)] bg-[var(--color-surface-2)] text-[var(--color-text)] shadow-sm"
+                                            : "border-[var(--color-border)] bg-transparent text-[var(--color-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)] hover:border-[var(--color-border-hover)]"
                                     )}
-                                    style={{
-                                        borderColor: mode === key ? "var(--color-accent)" : "var(--color-border)",
-                                        background: mode === key ? "var(--color-accent-subtle)" : "var(--color-surface)",
-                                        color: mode === key ? "var(--color-accent)" : "var(--color-muted)",
-                                    }}
                                 >
-                                    <Icon className="h-6 w-6" />
-                                    {label}
+                                    <Icon className="h-5 w-5" />
+                                    <div className="text-center">
+                                        <div className="text-[13px] font-medium">{label}</div>
+                                        <div className="text-[11px] font-normal opacity-60 mt-0.5">{desc}</div>
+                                    </div>
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     {/* System Status */}
-                    <div className="card space-y-4">
-                        <div className="flex items-center gap-2">
-                            <Server className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
-                            <h2 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>System Status</h2>
+                    <div className="card space-y-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Server className="h-4 w-4 text-[var(--color-text)]" />
+                                    <h2 className="text-[14px] font-semibold text-[var(--color-text)]">System Status</h2>
+                                </div>
+                                <p className="text-[13px] text-[var(--color-muted)]">Real-time backend information</p>
+                            </div>
+                            <div className={clsx("status-badge", isOnline ? "status-online" : "status-offline")}>
+                                <span className={clsx("h-1.5 w-1.5 rounded-full", isOnline ? "bg-[var(--color-success)]" : "bg-[var(--color-error)]")} />
+                                {isOnline ? "Online" : "Offline"}
+                            </div>
                         </div>
+
                         {loading ? (
-                            <div className="flex items-center justify-center py-8">
-                                <Loader2 className="h-5 w-5 animate-spin" style={{ color: "var(--color-accent)" }} />
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                {[...Array(4)].map((_, i) => (
+                                    <div key={i} className="rounded-[12px] p-4 bg-[var(--color-surface-2)] border border-[var(--color-border)] shimmer">
+                                        <div className="h-3 w-16 rounded bg-[var(--color-surface-3)] mb-2" />
+                                        <div className="h-4 w-24 rounded bg-[var(--color-surface-3)]" />
+                                    </div>
+                                ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                <div className="rounded-lg p-3" style={{ background: "var(--color-surface-2)" }}>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <div className={clsx("h-2 w-2 rounded-full", systemInfo.status === "ok" ? "bg-green-400" : "bg-red-400")} />
-                                        <span className="text-xs font-medium" style={{ color: "var(--color-text)" }}>Backend</span>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                {[
+                                    { icon: Server, label: "Backend", value: systemInfo.status === "ok" ? "Connected" : "Disconnected" },
+                                    { icon: Cpu, label: "LLM Model", value: systemInfo.llm_model || "mistral" },
+                                    { icon: HardDrive, label: "Version", value: systemInfo.version || "1.0.0" },
+                                    { icon: RefreshCw, label: "API", value: "127.0.0.1:8000" },
+                                ].map(({ icon: Icon, label, value }) => (
+                                    <div key={label} className="rounded-[12px] p-4 bg-[var(--color-surface-2)] border border-[var(--color-border)]">
+                                        <div className="flex items-center gap-1.5 mb-2">
+                                            <Icon className="h-3.5 w-3.5 text-[var(--color-muted)]" />
+                                            <span className="text-[11px] font-medium text-[var(--color-muted)] uppercase tracking-wider">{label}</span>
+                                        </div>
+                                        <p className="text-[13px] font-semibold text-[var(--color-text)] truncate">{value}</p>
                                     </div>
-                                    <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>{systemInfo.status === "ok" ? "Connected" : "Disconnected"}</p>
-                                </div>
-                                <div className="rounded-lg p-3" style={{ background: "var(--color-surface-2)" }}>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Cpu className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
-                                        <span className="text-xs font-medium" style={{ color: "var(--color-text)" }}>LLM Model</span>
-                                    </div>
-                                    <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>{systemInfo.llm_model || "mistral"}</p>
-                                </div>
-                                <div className="rounded-lg p-3" style={{ background: "var(--color-surface-2)" }}>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <HardDrive className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
-                                        <span className="text-xs font-medium" style={{ color: "var(--color-text)" }}>Version</span>
-                                    </div>
-                                    <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>{systemInfo.version || "1.0.0"}</p>
-                                </div>
-                                <div className="rounded-lg p-3" style={{ background: "var(--color-surface-2)" }}>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <RefreshCw className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
-                                        <span className="text-xs font-medium" style={{ color: "var(--color-text)" }}>API</span>
-                                    </div>
-                                    <p className="text-[11px]" style={{ color: "var(--color-muted)" }}>http://127.0.0.1:8000</p>
-                                </div>
+                                ))}
                             </div>
                         )}
                     </div>
 
-                    {/* Sessions */}
-                    <div className="card space-y-4">
-                        <div className="flex items-center gap-2">
-                            <Trash2 className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
-                            <h2 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>Chat Sessions</h2>
+                    {/* Chat Sessions */}
+                    <div className="card space-y-5">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Trash2 className="h-4 w-4 text-[var(--color-text)]" />
+                                <h2 className="text-[14px] font-semibold text-[var(--color-text)]">Chat Sessions</h2>
+                            </div>
+                            <p className="text-[13px] text-[var(--color-muted)]">Manage and clear conversation history</p>
                         </div>
-                        <p className="text-xs" style={{ color: "var(--color-muted)" }}>Manage and clear conversation history</p>
+
                         {sessions.length === 0 ? (
-                            <p className="text-xs py-4 text-center" style={{ color: "var(--color-muted)" }}>No active sessions</p>
+                            <div className="flex flex-col items-center gap-3 py-8 text-center rounded-[12px] border border-dashed border-[var(--color-border)]">
+                                <div className="h-10 w-10 rounded-full bg-[var(--color-surface-2)] flex items-center justify-center">
+                                    <Trash2 className="h-5 w-5 text-[var(--color-muted)]" />
+                                </div>
+                                <div>
+                                    <p className="text-[14px] font-medium text-[var(--color-text)]">No active sessions</p>
+                                    <p className="text-[13px] text-[var(--color-muted)] mt-0.5">Sessions will appear here once you start chatting.</p>
+                                </div>
+                            </div>
                         ) : (
                             <div className="space-y-2">
                                 {sessions.map((session) => (
                                     <div
                                         key={session}
-                                        className="flex items-center justify-between rounded-lg px-3 py-2.5"
-                                        style={{ background: "var(--color-surface-2)" }}
+                                        className="flex items-center justify-between rounded-[12px] px-4 py-3 bg-[var(--color-surface-2)] border border-[var(--color-border)] transition-all duration-200 hover:border-[var(--color-border-hover)]"
                                     >
-                                        <span className="text-sm truncate" style={{ color: "var(--color-text)" }}>{session}</span>
+                                        <span className="text-[14px] font-medium text-[var(--color-text)] truncate">{session}</span>
                                         <button
                                             onClick={() => handleClearSession(session)}
                                             disabled={clearing === session}
-                                            className="btn-ghost !px-2 !py-1 !text-xs text-red-400 hover:text-red-300"
+                                            className="btn-ghost !px-2.5 !py-1.5 !text-[13px] text-[var(--color-error)] hover:text-[var(--color-error)] hover:bg-[var(--color-error)]/08 shrink-0 ml-3 transition-all duration-200"
                                         >
                                             {clearing === session ? (
                                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -202,25 +227,22 @@ export default function SettingsPage() {
                     </div>
 
                     {/* About */}
-                    <div className="card space-y-3">
-                        <h2 className="text-sm font-semibold" style={{ color: "var(--color-text)" }}>About Astra</h2>
-                        <p className="text-xs leading-relaxed" style={{ color: "var(--color-muted)" }}>
+                    <div className="card space-y-4">
+                        <h2 className="text-[14px] font-semibold text-[var(--color-text)]">About Astra</h2>
+                        <p className="text-[14px] leading-relaxed text-[var(--color-muted)]">
                             Astra is a personal offline AI assistant powered by local LLMs via Ollama.
                             It supports text chat, voice interaction, image/video/audio generation,
-                            avatar customization, and LoRA training — all running locally on your machine.
+                            avatar customization, and LoRA training — all running entirely on your machine.
                         </p>
-                        <div className="flex items-center gap-2 pt-1">
-                            <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "var(--color-accent-subtle)", color: "var(--color-accent)" }}>
-                                Open Source
-                            </span>
-                            <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "var(--color-accent-subtle)", color: "var(--color-accent)" }}>
-                                100% Local
-                            </span>
-                            <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: "var(--color-accent-subtle)", color: "var(--color-accent)" }}>
-                                Privacy First
-                            </span>
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                            {["Open Source", "100% Local", "Privacy First"].map((tag) => (
+                                <span key={tag} className="text-[11px] font-medium px-3 py-1 rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-muted)]">
+                                    {tag}
+                                </span>
+                            ))}
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
